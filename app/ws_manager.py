@@ -58,9 +58,9 @@ class WebSocketManager:
             if websocket in self._connections:
                 self._connections[websocket] = role
 
-        # If a viewer just announced, send them the cached QR or frame immediately
+        # If a viewer just announced, send them the freshest cached QR or frame immediately
         if role == "viewer":
-            if self._latest_qr is not None:
+            if self._latest_qr is not None and self._latest_qr_time >= self._latest_frame_time:
                 asyncio.create_task(self._safe_send_text(websocket, self._latest_qr))
             elif self._latest_frame is not None:
                 asyncio.create_task(self._safe_send_bytes(websocket, self._latest_frame))

@@ -206,6 +206,33 @@ const pEci = runPreservationTest(
 );
 assert(pEci.eci === 26, "Test I — Preserved ECI assignment matches 26");
 
+// Test J — Fallback: Downscaled Image Mode (No Random Regen)
+console.log("\n--- Running Test J: Fallback (Downscaled Image Mode — No Random Regen) ---");
+const dummyPayload = "FALLBACK-TEST-12345";
+const dummyImage = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+const decodedWithoutMatrix = {
+  data: dummyPayload,
+  image: dummyImage,
+};
+
+const preservedFallback = createPreservedQr(decodedWithoutMatrix);
+assert(preservedFallback !== null, "Test J — PreservedQr created for fallback");
+assert(preservedFallback.mode === "IMAGE", `Test J — Mode is IMAGE (got ${preservedFallback.mode})`);
+assert(preservedFallback.moduleMatrix === null, "Test J — No random synthetic matrix generated (moduleMatrix is null)");
+assert(preservedFallback.image === dummyImage, "Test J — Downscaled image preserved");
+assert(preservedFallback.payload === dummyPayload, "Test J — Payload preserved");
+
+// Verify serialization roundtrip
+const fallbackJson = preservedFallback.toJSON();
+assert(fallbackJson.mode === "IMAGE", "Test J — toJSON() preserves mode IMAGE");
+assert(fallbackJson.image === dummyImage, "Test J — toJSON() preserves image");
+assert(fallbackJson.compressedMatrix === null, "Test J — toJSON() has null compressedMatrix");
+
+const restoredFallback = QrPreserver.PreservedQr.fromJSON(fallbackJson);
+assert(restoredFallback.mode === "IMAGE", "Test J — fromJSON() restores mode IMAGE");
+assert(restoredFallback.image === dummyImage, "Test J — fromJSON() restores image");
+assert(restoredFallback.moduleMatrix === null, "Test J — fromJSON() has null moduleMatrix");
+
 console.log("\n==================================================");
 console.log(`TEST SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED out of ${totalTests} assertions.`);
 console.log("==================================================");
@@ -213,3 +240,4 @@ console.log("==================================================");
 if (failedTests > 0) {
   Deno.exit(1);
 }
+

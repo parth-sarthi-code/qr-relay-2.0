@@ -896,9 +896,17 @@
     function displayPreservedQr(qrData) {
       if (!qrData) return;
       const preserved = QrPreserver.PreservedQr.fromJSON(qrData);
-      if (!preserved || !preserved.moduleMatrix) return;
+      if (!preserved) return;
 
       currentPreserved = preserved;
+
+      // Handle Downscaled Image Fallback Mode
+      if (preserved.mode === 'IMAGE' || (!preserved.moduleMatrix && preserved.image)) {
+        displayDownscaledImage(preserved);
+        return;
+      }
+
+      if (!preserved.moduleMatrix) return;
 
       // Render exact module matrix cleanly on canvas
       QrPreserver.ExactQrRenderer.renderToCanvas(preserved.moduleMatrix, qrCanvas, {
@@ -926,7 +934,7 @@
         modeBadge.textContent = 'Mode 2 — Structural (Fixed Metadata)';
       } else {
         modeBadge.className = 'mode-pill payload';
-        modeBadge.textContent = 'Mode 3 — Payload (Fallback Generated)';
+        modeBadge.textContent = 'Mode 3 — Downscaled Image (Fallback)';
       }
 
       // Metadata Inspector
@@ -956,9 +964,63 @@
         valVerification.innerHTML = `<span style="color:var(--amber);">${preserved.mismatchCount >= 0 ? `${preserved.mismatchCount} mismatches` : 'Unverified'}</span>`;
       }
 
+      // Re-enable SVG vector export for exact matrix modes
+      downloadSvgBtn.style.opacity = '1';
+      downloadSvgBtn.style.pointerEvents = 'auto';
+      downloadSvgBtn.title = 'Download exact vector SVG';
+
       // Payload
       lastRenderedPayload = preserved.payload || '';
       payloadText.textContent = lastRenderedPayload || '(Binary or unparsed payload)';
+      payloadLenBadge.textContent = `${lastRenderedPayload.length} chars`;
+    }
+
+    /* ========== Downscaled Image Fallback Renderer ========== */
+    function displayDownscaledImage(preserved) {
+      if (!preserved) return;
+
+      currentPreserved = preserved;
+
+      if (preserved.image) {
+        qrImg.src = preserved.image;
+        qrImg.style.display = 'block';
+      }
+      qrCanvas.classList.remove('visible');
+      placeholder.style.display = 'none';
+
+      // Timestamp
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      timeVal.textContent = timeStr;
+      timestampBadge.textContent = timeStr;
+
+      // Mode Badge
+      preservationPanel.style.display = 'flex';
+      modeBadge.className = 'mode-pill payload';
+      modeBadge.textContent = 'Mode 3 — Downscaled Image (Fallback)';
+
+      // Metadata Inspector
+      valVersion.textContent = 'Camera Crop';
+      valEc.textContent = '—';
+      valMask.textContent = '—';
+      valGrid.textContent = '360×360 px (Downscaled)';
+      valVerification.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span style="color:var(--amber);">Fallback — Downscaled Image Mode</span>
+      `;
+
+      // Disable vector SVG button for bitmap image
+      downloadSvgBtn.style.opacity = '0.4';
+      downloadSvgBtn.style.pointerEvents = 'none';
+      downloadSvgBtn.title = 'Vector SVG only available in exact matrix modes';
+
+      // Payload
+      lastRenderedPayload = preserved.payload || '';
+      payloadText.textContent = lastRenderedPayload || '(Downscaled camera crop — payload unparsed)';
       payloadLenBadge.textContent = `${lastRenderedPayload.length} chars`;
     }
 
@@ -975,6 +1037,14 @@
 
     downloadPngBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (currentPreserved && (currentPreserved.mode === 'IMAGE' || !currentPreserved.moduleMatrix)) {
+        const a = document.createElement('a');
+        const slug = (currentPreserved.payload || 'qr_image').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
+        a.download = `qr_${slug}.jpg`;
+        a.href = currentPreserved.image || qrImg.src;
+        a.click();
+        return;
+      }
       if (!qrCanvas || !currentPreserved) return;
       const a = document.createElement('a');
       const slug = (currentPreserved.payload || 'qr').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
@@ -1007,7 +1077,35 @@
       qrImg.style.display = 'block';
       qrCanvas.classList.remove('visible');
       placeholder.style.display = 'none';
-      preservationPanel.style.display = 'none';
+      preservationPanel.style.display = 'flex';
+
+      currentPreserved = {
+        mode: 'IMAGE',
+        image: url,
+        payload: '',
+      };
+
+      modeBadge.className = 'mode-pill payload';
+      modeBadge.textContent = 'Mode 3 — Downscaled Image (Fallback)';
+      valVersion.textContent = 'Camera Crop';
+      valEc.textContent = '—';
+      valMask.textContent = '—';
+      valGrid.textContent = 'Downscaled Image';
+      valVerification.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span style="color:var(--amber);">Fallback — Downscaled Image Mode</span>
+      `;
+
+      downloadSvgBtn.style.opacity = '0.4';
+      downloadSvgBtn.style.pointerEvents = 'none';
+
+      lastRenderedPayload = '';
+      payloadText.textContent = '(Downscaled camera crop — legacy binary stream)';
+      payloadLenBadge.textContent = '0 chars';
 
       const now = new Date();
       timeVal.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });

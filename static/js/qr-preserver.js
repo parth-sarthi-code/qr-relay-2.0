@@ -7,7 +7,7 @@
  * Adheres strictly to ISO/IEC 18004 QR specifications:
  * - Mode 1: EXACT (Module Matrix direct preservation & rendering)
  * - Mode 2: STRUCTURAL (Fixed Version, EC Level, Mask Pattern, Codewords/Segments)
- * - Mode 3: PAYLOAD (Fallback regeneration when structural info is absent)
+ * - Mode 3: IMAGE (Downscaled image mode fallback — NO random synthetic regeneration)
  *
  * v2.1 fixes & optimizations:
  * - FIX: Mode 1 Path A canonical ALWAYS wins — RS-corrected dataCodewords are authoritative.
@@ -169,8 +169,9 @@
       this.matrixSize = data.matrixSize || (data.moduleMatrix ? data.moduleMatrix.length : null);
       // Pre-compute and CACHE compressed matrix once — constructor is the only place this should run.
       this.compressedMatrix = data.compressedMatrix || (data.moduleMatrix ? compressMatrix(data.moduleMatrix) : null);
+      this.image = data.image || null;
       this.location = data.location || null;
-      this.mode = data.mode || 'EXACT';
+      this.mode = data.mode || (data.moduleMatrix ? 'EXACT' : (data.image ? 'IMAGE' : 'EXACT'));
       this.isVerified = !!data.isVerified;
       this.mismatchCount = typeof data.mismatchCount === 'number' ? data.mismatchCount : 0;
       this.verification = data.verification || null;
@@ -193,6 +194,7 @@
         matrixSize: this.matrixSize,
         // FIX: reuse pre-computed field — never re-compress here (was O(n²) per send)
         compressedMatrix: this.compressedMatrix,
+        image: this.image,
         mode: this.mode,
         isVerified: this.isVerified,
         mismatchCount: this.mismatchCount,
@@ -216,6 +218,7 @@
         moduleMatrix: matrix,
         // Pass through the pre-compressed field so constructor skips re-compression
         compressedMatrix: json.compressedMatrix || null,
+        image: json.image || null,
       });
     }
   }
@@ -229,8 +232,8 @@
    * 2. If structural parameters available without matrix:
    *    - Reconstruct canonical matrix
    *    - Use Mode 2: STRUCTURAL
-   * 3. If only payload available:
-   *    - Use Mode 3: PAYLOAD (fallback)
+   * 3. Fallback:
+   *    - Use Mode 3: IMAGE (Downscaled image mode — NO random synthetic regeneration)
    *
    * @param {object} decoded Decoder output from enhanced jsQR or other decoder
    * @returns {PreservedQr}
@@ -390,32 +393,27 @@
       });
     }
 
-    // MODE 3: PAYLOAD (Fallback)
-    let fallbackMatrix = null;
-    if (qrcodegen && payload) {
-      try {
-        const qr = qrcodegen.QrCode.encodeText(payload, qrcodegen.QrCode.Ecc.MEDIUM);
-        fallbackMatrix = qrCodeToMatrix(qr);
-      } catch (_) {}
-    }
+    // MODE 3: DOWNSCALED IMAGE (Fallback — no random synthetic regen)
+    const image = decoded.image || decoded.downscaledImage || decoded.crop || null;
 
     return new PreservedQr({
       payload,
-      version: fallbackMatrix ? Math.floor((fallbackMatrix.length - 17) / 4) : null,
-      errorCorrection: 'M',
+      version: null,
+      errorCorrection: null,
       maskPattern: null,
       segments: null,
       eci: null,
       rawCodewords: null,
       dataCodewords: null,
-      moduleMatrix: fallbackMatrix,
+      moduleMatrix: null,
+      image,
       location,
-      mode: 'PAYLOAD',
+      mode: 'IMAGE',
       isVerified: false,
       mismatchCount: -1,
       verification: {
         equal: false,
-        totalModules: fallbackMatrix ? fallbackMatrix.length * fallbackMatrix.length : 0,
+        totalModules: 0,
         mismatches: -1,
         matchPercentage: 0,
       },
