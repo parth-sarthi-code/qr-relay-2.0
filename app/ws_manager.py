@@ -22,6 +22,10 @@ class WebSocketManager:
         self._latest_frame: Optional[bytes] = None
         self._latest_frame_time: float = 0.0
 
+        # Debounce status broadcasts: coalesce rapid connect/disconnect bursts
+        self._status_dirty = False
+        self._status_task: Optional[asyncio.Task] = None
+
     # ------------------------------------------------------------------
     # Connection lifecycle
     # ------------------------------------------------------------------
@@ -65,10 +69,9 @@ class WebSocketManager:
         if len(data) > settings.MAX_FRAME_SIZE:
             return  # reject oversized blobs silently
 
-        self._latest_frame = data
-        self._latest_frame_time = time.monotonic()
-
         async with self._lock:
+            self._latest_frame = data
+            self._latest_frame_time = time.monotonic()
             viewers = [
                 ws for ws, role in self._connections.items() if role == "viewer"
             ]
@@ -112,28 +115,41 @@ class WebSocketManager:
             await self._remove(ws)
 
     async def _remove(self, ws: WebSocket) -> None:
-        """Remove a connection without re-broadcasting (avoids recursion)."""
+        """Remove a connection and close the socket to avoid zombie TCP connections."""
         async with self._lock:
             self._connections.pop(ws, None)
+        try:
+            await ws.close()
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     # Status broadcasting
     # ------------------------------------------------------------------
 
     async def _broadcast_status(self) -> None:
-        """Send connection counts to all peers."""
-        async with self._lock:
-            senders = sum(1 for r in self._connections.values() if r == "sender")
-            viewers = sum(1 for r in self._connections.values() if r == "viewer")
-            all_ws = list(self._connections.keys())
+        """Debounced status broadcast — coalesces rapid connect/disconnect bursts."""
+        if self._status_dirty:
+            return  # already scheduled
+        self._status_dirty = True
 
-        payload = json.dumps({
-            "type": "status",
-            "senders": senders,
-            "viewers": viewers,
-        })
-        for ws in all_ws:
-            asyncio.create_task(self._safe_send_text(ws, payload))
+        async def _send_after_delay() -> None:
+            await asyncio.sleep(0.05)  # 50ms debounce window
+            self._status_dirty = False
+            async with self._lock:
+                senders = sum(1 for r in self._connections.values() if r == "sender")
+                viewers = sum(1 for r in self._connections.values() if r == "viewer")
+                all_ws = list(self._connections.keys())
+
+            payload = json.dumps({
+                "type": "status",
+                "senders": senders,
+                "viewers": viewers,
+            })
+            for ws in all_ws:
+                asyncio.create_task(self._safe_send_text(ws, payload))
+
+        self._status_task = asyncio.create_task(_send_after_delay())
 
     # ------------------------------------------------------------------
     # Stats endpoint

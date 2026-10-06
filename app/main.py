@@ -1,6 +1,7 @@
 """FastAPI application — HTTP routes and WebSocket endpoint."""
 
 import json
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -114,4 +115,5 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
     except Exception:
+        logging.exception("Unexpected error in WebSocket handler")
         await manager.disconnect(websocket)
