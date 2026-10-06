@@ -218,56 +218,6 @@
       border-color: var(--emerald-border);
       color: var(--emerald);
     }
-    .viewfinder-status.fallback {
-      background: rgba(245, 158, 11, 0.15);
-      border-color: rgba(245, 158, 11, 0.3);
-      color: #fbbf24;
-    }
-
-    /* Relay Mode Selector */
-    .relay-mode-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding-top: 2px;
-    }
-    .mode-tag {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--text-dim);
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .mode-pills-group {
-      display: flex;
-      gap: 6px;
-      flex: 1;
-      justify-content: flex-end;
-    }
-    .pill-btn {
-      background: var(--bg-input);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      color: var(--text-muted);
-      font-size: 0.72rem;
-      font-weight: 600;
-      font-family: inherit;
-      padding: 5px 10px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-    .pill-btn:hover {
-      background: var(--bg-card-hover);
-      color: var(--text-main);
-    }
-    .pill-btn.active {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: rgba(59, 130, 246, 0.4);
-      color: #60a5fa;
-    }
 
     /* ---- Controls Section ---- */
     .controls-card {
@@ -482,18 +432,6 @@
         </div>
       </div>
 
-      <!-- Relay Mode Selector -->
-      <div class="relay-mode-bar">
-        <span class="mode-tag">Relay Mode:</span>
-        <div class="mode-pills-group">
-          <button id="modeAutoBtn" class="pill-btn active" type="button" title="Preserve exact matrix; fallback to downscaled image">
-            Auto (Exact + Fallback Image)
-          </button>
-          <button id="modeForceImgBtn" class="pill-btn" type="button" title="Force downscaled camera crop image mode">
-            Force Downscaled Image
-          </button>
-        </div>
-      </div>
     </section>
   </div>
 
@@ -516,8 +454,6 @@
     const readyBtn     = document.getElementById('readyBtn');
     const signalIcon   = document.getElementById('signalIcon');
     const signalText   = document.getElementById('signalText');
-    const modeAutoBtn     = document.getElementById('modeAutoBtn');
-    const modeForceImgBtn = document.getElementById('modeForceImgBtn');
 
     /* ========== State ========== */
     const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -531,78 +467,12 @@
     let lastScanTime = 0;
     let viewerCount = 0;
     let torchOn = false;
-    let forceImageMode = false;
 
-    if (modeAutoBtn && modeForceImgBtn) {
-      modeAutoBtn.addEventListener('click', () => {
-        forceImageMode = false;
-        modeAutoBtn.classList.add('active');
-        modeForceImgBtn.classList.remove('active');
-        lastQRText = null;
-      });
-      modeForceImgBtn.addEventListener('click', () => {
-        forceImageMode = true;
-        modeForceImgBtn.classList.add('active');
-        modeAutoBtn.classList.remove('active');
-        lastQRText = null;
-      });
-    }
-
-    // Offscreen detection, ROI crop, and downscaled export canvases
+    // Offscreen detection & ROI crop canvases
     const detectCanvas = document.createElement('canvas');
     const detectCtx    = detectCanvas.getContext('2d', { willReadFrequently: true });
     const roiCanvas    = document.createElement('canvas');
     const roiCtx       = roiCanvas.getContext('2d', { willReadFrequently: true });
-    const cropCanvas   = document.createElement('canvas');
-    const cropCtx      = cropCanvas.getContext('2d', { willReadFrequently: true });
-
-    // Pre-computed LUT for grayscale + contrast boost (factor=2.5, midpoint=128)
-    const CONTRAST_LUT = new Uint8Array(256);
-    (() => {
-      const FACTOR = 2.5;
-      for (let i = 0; i < 256; i++) {
-        CONTRAST_LUT[i] = Math.max(0, Math.min(255, Math.round(FACTOR * (i - 128) + 128)));
-      }
-    })();
-
-    function extractDownscaledCrop(bbox, scale, vw, vh) {
-      if (!bbox || !scale || !vw || !vh) return null;
-      const pad = 0.22;
-      const fx = bbox.x / scale;
-      const fy = bbox.y / scale;
-      const fw = bbox.w / scale;
-      const fh = bbox.h / scale;
-
-      const side = Math.max(fw, fh);
-      const paddedSide = side * (1 + pad * 2);
-      const centerX = fx + fw / 2;
-      const centerY = fy + fh / 2;
-      const cx = Math.max(0, Math.round(centerX - paddedSide / 2));
-      const cy = Math.max(0, Math.round(centerY - paddedSide / 2));
-      const cw = Math.min(Math.round(paddedSide), vw - cx);
-      const ch = Math.min(Math.round(paddedSide), vh - cy);
-      const cropSide = Math.min(cw, ch);
-
-      if (cropSide <= 20) return null;
-
-      const CROP_SIZE = 360;
-      cropCanvas.width = CROP_SIZE;
-      cropCanvas.height = CROP_SIZE;
-      cropCtx.drawImage(video, cx, cy, cropSide, cropSide, 0, 0, CROP_SIZE, CROP_SIZE);
-
-      // Boost contrast and sharpen grayscale for clean QR legibility
-      try {
-        const imgData = cropCtx.getImageData(0, 0, CROP_SIZE, CROP_SIZE);
-        const d = imgData.data;
-        for (let i = 0; i < d.length; i += 4) {
-          const gray = CONTRAST_LUT[Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2])];
-          d[i] = d[i + 1] = d[i + 2] = gray;
-        }
-        cropCtx.putImageData(imgData, 0, 0);
-      } catch (_) {}
-
-      return cropCanvas.toDataURL('image/jpeg', 0.88);
-    }
 
     // Native BarcodeDetector (if available on Chrome/Android)
     let nativeDetector = null;
@@ -949,64 +819,33 @@
       // Update overlay box
       showOverlay(bbox, scale);
 
-      let preserved = null;
-
-      // Primary: Exact Module Matrix Preservation (when not forcing image mode)
-      if (!forceImageMode && code && (code.moduleMatrix || (code.version && code.errorCorrectionLevel))) {
-        preserved = QrPreserver.createPreservedQr(code);
+      // Preserve QR locally (strict exact preservation only — no fallback mode)
+      const preserved = code ? QrPreserver.createPreservedQr(code) : null;
+      if (!preserved) {
+        statusVal.className = 'viewfinder-status';
+        statusVal.textContent = 'Focusing QR modules...';
+        return;
       }
 
+      const signature = preserved.compressedMatrix || preserved.payload;
+      if (signature === lastQRText) return;
+      lastQRText = signature;
+
+      // Broadcast preserved QR via WebSocket
       const t0 = performance.now();
-
-      if (preserved && (preserved.mode === 'EXACT' || preserved.mode === 'STRUCTURAL')) {
-        // Mode 1 (Exact) or Mode 2 (Structural)
-        const signature = preserved.compressedMatrix || preserved.payload;
-        if (signature === lastQRText) return;
-        lastQRText = signature;
-
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({
-            type: 'qr_preserved',
-            qr: preserved.toJSON(),
-          }));
-          const elapsed = Math.round(performance.now() - t0);
-          latencyVal.textContent = `${elapsed}ms`;
-          const ecStr = preserved.errorCorrection ? `EC:${preserved.errorCorrection}` : '';
-          const maskStr = preserved.maskPattern !== null ? `M${preserved.maskPattern}` : '';
-          statusVal.className = 'viewfinder-status detected';
-          statusVal.textContent = `Transmitted: V${preserved.version || '?'} ${ecStr} ${maskStr} [${preserved.mode}]`;
-        } else {
-          statusVal.textContent = 'Detected — Relay offline';
-        }
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'qr_preserved',
+          qr: preserved.toJSON(),
+        }));
+        const elapsed = Math.round(performance.now() - t0);
+        latencyVal.textContent = `${elapsed}ms`;
+        const ecStr = preserved.errorCorrection ? `EC:${preserved.errorCorrection}` : '';
+        const maskStr = preserved.maskPattern !== null ? `M${preserved.maskPattern}` : '';
+        statusVal.className = 'viewfinder-status detected';
+        statusVal.textContent = `Transmitted: V${preserved.version || '?'} ${ecStr} ${maskStr} [${preserved.mode}]`;
       } else {
-        // Fallback: Downscaled Image Mode (NO RANDOM REGEN)
-        const downscaledImg = extractDownscaledCrop(bbox, scale, vw, vh);
-        if (!downscaledImg) return;
-
-        preserved = new QrPreserver.PreservedQr({
-          payload: qrText,
-          location: code ? code.location : null,
-          image: downscaledImg,
-          mode: 'IMAGE',
-          isVerified: false,
-        });
-
-        const signature = 'IMG:' + (qrText || '') + ':' + Math.round(bbox.x / 12) + '_' + Math.round(bbox.y / 12);
-        if (signature === lastQRText) return;
-        lastQRText = signature;
-
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({
-            type: 'qr_preserved',
-            qr: preserved.toJSON(),
-          }));
-          const elapsed = Math.round(performance.now() - t0);
-          latencyVal.textContent = `${elapsed}ms`;
-          statusVal.className = 'viewfinder-status fallback';
-          statusVal.textContent = `Transmitted: Downscaled Image [FALLBACK]`;
-        } else {
-          statusVal.textContent = 'Detected — Relay offline';
-        }
+        statusVal.textContent = 'Detected — Relay offline';
       }
     }
 

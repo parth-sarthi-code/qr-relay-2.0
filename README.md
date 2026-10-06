@@ -8,8 +8,8 @@ High-performance, zero-image-streaming QR relay service. Instead of transmitting
 
 - **Exact QR Preservation (Goal B)**: Preserves module matrix, version (1–40), error correction level (L, M, Q, H), mask pattern (0–7), ECI, and encoding segments.
 - **Reed-Solomon Canonical Auto-Repair**: Corrects camera sampling noise and glare, achieving 100% verified identical symbols.
-- **Clean Downscaled Image Fallback (No Random Regen)**: When exact structural characteristics cannot be recovered (or in partial visibility / barcode scanner fallback), the engine cleanly falls back to a contrast-boosted downscaled camera crop image mode rather than synthesizing a random or speculative regenerated QR symbol.
-- **Compact Bitstring Transmission**: Vector matrix modes relay only a compact bitstring (< 100 bytes) over WebSockets.
+- **Strict Deterministic Policy**: Zero lossy image streaming and zero fallback guessing — only authentic, 100% verified QR symbols are relayed.
+- **Ultra-Compact Bitstring Relay**: Transmits compact bitstrings (< 100 bytes) over WebSockets with sub-millisecond serialization.
 - **Professional Minimalist Interface**: Built for utility and speed (property inspector, SVG/PNG export, copyable payload).
 - **Audio Attention Signal**: Sender-to-viewer operator attention signal with local chime.
 - **Production & Railway Ready**: Pre-configured `Dockerfile`, `.dockerignore`, `railway.json`, and automatic cloud environment detection.
@@ -60,7 +60,7 @@ python run.py
 
 ## 🧪 Testing
 
-Run the automated preservation test suite (176 assertions covering all QR versions, EC levels, masks, segments, and Downscaled Image fallback mode):
+Run the automated preservation test suite (166 assertions covering all QR versions, EC levels, masks, segments, and strict preservation policy):
 
 ```bash
 deno run -A tests/test_qr_preservation.js
