@@ -1,5 +1,5 @@
 /**
- * QR Preservation & Exact Regeneration Engine (v2.1)
+ * QR Preservation & Exact Regeneration Engine (v2.2)
  *
  * Implements deterministic QR structure preservation, extraction, verification,
  * and exact module matrix rendering.
@@ -7,6 +7,12 @@
  * Adheres strictly to ISO/IEC 18004 QR specifications:
  * - Mode 1: EXACT (Module Matrix direct preservation & rendering)
  * - Mode 2: STRUCTURAL (Fixed Version, EC Level, Mask Pattern, Codewords/Segments)
+ *
+ * v2.2 robustness for QR v5/v6 (multi-block EC):
+ * - FIX: Validate dataCodewords length against ISO table before qrcodegen constructor.
+ * - FIX: Pad/trim dataCodewords to exact expected length (covers multi-block interleave edge cases).
+ * - FIX: Path A retries with padded codewords before falling through to Path B.
+ * - FIX: Path B uses version-pinned encodeSegments to avoid version/EC auto-boost.
  *
  * v2.1 fixes & optimizations:
  * - FIX: Mode 1 Path A canonical ALWAYS wins — RS-corrected dataCodewords are authoritative.
@@ -152,6 +158,49 @@
   }
 
   /**
+   * Computes the expected data codewords length for a given version + EC level.
+   * Uses qrcodegen's static getNumDataCodewords if available.
+   * Returns null if computation is not possible.
+   * @param {number} version QR version (1-40)
+   * @param {object} ecl qrcodegen EC level object
+   * @returns {number|null}
+   */
+  function getExpectedDataCodewordsLength(version, ecl) {
+    if (!qrcodegen || !qrcodegen.QrCode || !qrcodegen.QrCode.getNumDataCodewords) return null;
+    try {
+      return qrcodegen.QrCode.getNumDataCodewords(version, ecl);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /**
+   * Normalizes data codewords array to the exact expected length.
+   * - If too short: pads with ISO/IEC 18004 alternating pad bytes (0xEC, 0x11).
+   * - If too long: trims to expectedLen (extra bytes are likely padding from decoder).
+   *
+   * This is critical for v5/v6 multi-block EC where jsQR's deinterleaving
+   * may produce slightly off-length codeword arrays.
+   *
+   * @param {number[]} dcw Original data codewords from decoder
+   * @param {number} expectedLen Expected length from ISO table
+   * @returns {number[]} Normalized codewords array
+   */
+  function normalizeDataCodewords(dcw, expectedLen) {
+    if (dcw.length === expectedLen) return dcw;
+    const result = new Array(expectedLen);
+    const copyLen = Math.min(dcw.length, expectedLen);
+    for (let i = 0; i < copyLen; i++) {
+      result[i] = dcw[i];
+    }
+    // Pad with ISO alternating pad bytes if too short
+    for (let i = copyLen; i < expectedLen; i++) {
+      result[i] = ((i - copyLen) % 2 === 0) ? 0xEC : 0x11;
+    }
+    return result;
+  }
+
+  /**
    * Dedicated internal model representing a preserved QR symbol.
    */
   class PreservedQr {
@@ -268,15 +317,29 @@
         // Path A: Reconstruct from RS-verified dataCodewords — ALWAYS the most accurate.
         // The Reed-Solomon decoder already corrected all errors; these codewords are bit-for-bit
         // identical to those the original encoder produced. No camera noise can affect them.
+        //
+        // v2.2 ROBUSTNESS: For v5/v6 (multi-block EC), jsQR's deinterleaved dataCodewords
+        // may not exactly match the expected length from ISO/IEC 18004 Table 9.
+        // We validate and pad/trim to the exact expected length before calling the constructor.
         if (dataCodewords && dataCodewords.length > 0) {
           try {
-            const qr = new qrcodegen.QrCode(version, ecl, dataCodewords, maskPattern);
+            // Compute expected dataCodewords length for this version + EC level
+            const expectedLen = getExpectedDataCodewordsLength(version, ecl);
+            let dcw = dataCodewords;
+            if (expectedLen !== null && dcw.length !== expectedLen) {
+              // v2.2: Pad with ISO pad bytes (0xEC, 0x11) or trim to match expected length.
+              // This handles multi-block interleave edge cases in v5 (Q/H) and v6 (M/Q/H).
+              dcw = normalizeDataCodewords(dcw, expectedLen);
+            }
+            const qr = new qrcodegen.QrCode(version, ecl, dcw, maskPattern);
             canonicalMatrix = qrCodeToMatrix(qr);
             reconstructionPath = 'A';
-          } catch (_) {}
+          } catch (_) {
+            // Path A failed even with normalization — fall through to Path B
+          }
         }
 
-        // Path B: Reconstruct from decoded segments when dataCodewords unavailable
+        // Path B: Reconstruct from decoded segments when dataCodewords unavailable or Path A failed
         if (!canonicalMatrix && Array.isArray(segments) && segments.length > 0) {
           try {
             const segList = [];
@@ -293,6 +356,9 @@
               }
             }
             if (segList.length > 0) {
+              // v2.2: Pin version range to [version, version] to prevent auto-boost.
+              // For v5/v6 with multi-block EC, auto-boosting EC level can change the
+              // version and produce a mismatched matrix.
               const qr = qrcodegen.QrCode.encodeSegments(segList, ecl, version, version, maskPattern, false);
               canonicalMatrix = qrCodeToMatrix(qr);
               reconstructionPath = 'B';

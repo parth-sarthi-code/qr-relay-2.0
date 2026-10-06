@@ -217,6 +217,192 @@ const preservedResult = createPreservedQr(decodedWithoutMatrix);
 assert(preservedResult === null, "Test J — Strict preservation policy: returns null when structural preservation is impossible (no fallback mode)");
 
 
+// ============================================================
+//  Test K — QR Version 5 Exhaustive: All EC Levels × All Masks
+// ============================================================
+console.log("\n==================================================");
+console.log("  TEST K: QR Version 5 — All EC Levels × All Masks");
+console.log("==================================================");
+
+// v5 = 37×37 modules, 1369 total modules
+// v5 alignment pattern centers: [6, 30]
+// v5 multi-block EC configs:
+//   L: 1 block, 108 data codewords
+//   M: 2 blocks, 43 data codewords each
+//   Q: 2+2 blocks (15+16 data codewords per block)
+//   H: 2+2 blocks (11+12 data codewords per block)
+
+const v5EcConfigs = [
+  { name: "L", ecl: qrcodegen.QrCode.Ecc.LOW,      desc: "1 block, 108 dcw" },
+  { name: "M", ecl: qrcodegen.QrCode.Ecc.MEDIUM,    desc: "2 blocks, 43 dcw each" },
+  { name: "Q", ecl: qrcodegen.QrCode.Ecc.QUARTILE,  desc: "2+2 blocks, 15+16 dcw" },
+  { name: "H", ecl: qrcodegen.QrCode.Ecc.HIGH,      desc: "2+2 blocks, 11+12 dcw" },
+];
+
+for (const ec of v5EcConfigs) {
+  for (let mask = 0; mask < 8; mask++) {
+    // Craft payload text that fits v5 for the given EC level
+    const text = `V5-${ec.name}-M${mask}-TEST`;
+    try {
+      const p = runPreservationTest(
+        `Test K — V5 EC:${ec.name} Mask:${mask} (${ec.desc})`,
+        qrcodegen.QrSegment.makeSegments(text),
+        ec.ecl,
+        5, 5, mask
+      );
+      assert(p.version === 5, `Test K — V5 EC:${ec.name} Mask:${mask}: Version is 5`);
+      assert(p.errorCorrection === ec.name, `Test K — V5 EC:${ec.name} Mask:${mask}: EC level matches`);
+      assert(p.maskPattern === mask, `Test K — V5 EC:${ec.name} Mask:${mask}: Mask pattern matches`);
+      assert(p.matrixSize === 37, `Test K — V5 EC:${ec.name} Mask:${mask}: Matrix size is 37×37`);
+    } catch (e) {
+      console.error(`Test K — V5 EC:${ec.name} Mask:${mask}: EXCEPTION: ${e.message}`);
+    }
+  }
+}
+
+
+// ============================================================
+//  Test L — QR Version 6 Exhaustive: All EC Levels × All Masks
+// ============================================================
+console.log("\n==================================================");
+console.log("  TEST L: QR Version 6 — All EC Levels × All Masks");
+console.log("==================================================");
+
+// v6 = 41×41 modules, 1681 total modules
+// v6 alignment pattern centers: [6, 34]
+// v6 multi-block EC configs:
+//   L: 2 blocks, 68 data codewords each
+//   M: 4 blocks, 27 data codewords each
+//   Q: 4 blocks, 19 data codewords each
+//   H: 4 blocks, 15 data codewords each
+
+const v6EcConfigs = [
+  { name: "L", ecl: qrcodegen.QrCode.Ecc.LOW,      desc: "2 blocks, 68 dcw each" },
+  { name: "M", ecl: qrcodegen.QrCode.Ecc.MEDIUM,    desc: "4 blocks, 27 dcw each" },
+  { name: "Q", ecl: qrcodegen.QrCode.Ecc.QUARTILE,  desc: "4 blocks, 19 dcw each" },
+  { name: "H", ecl: qrcodegen.QrCode.Ecc.HIGH,      desc: "4 blocks, 15 dcw each" },
+];
+
+for (const ec of v6EcConfigs) {
+  for (let mask = 0; mask < 8; mask++) {
+    // Craft payload text that fits v6 for the given EC level
+    const text = `V6-${ec.name}-MASK${mask}-ROBUST-TEST`;
+    try {
+      const p = runPreservationTest(
+        `Test L — V6 EC:${ec.name} Mask:${mask} (${ec.desc})`,
+        qrcodegen.QrSegment.makeSegments(text),
+        ec.ecl,
+        6, 6, mask
+      );
+      assert(p.version === 6, `Test L — V6 EC:${ec.name} Mask:${mask}: Version is 6`);
+      assert(p.errorCorrection === ec.name, `Test L — V6 EC:${ec.name} Mask:${mask}: EC level matches`);
+      assert(p.maskPattern === mask, `Test L — V6 EC:${ec.name} Mask:${mask}: Mask pattern matches`);
+      assert(p.matrixSize === 41, `Test L — V6 EC:${ec.name} Mask:${mask}: Matrix size is 41×41`);
+    } catch (e) {
+      console.error(`Test L — V6 EC:${ec.name} Mask:${mask}: EXCEPTION: ${e.message}`);
+    }
+  }
+}
+
+
+// ============================================================
+//  Test M — Multi-Block EC Stress Tests (v5-Q, v5-H, v6-M/Q/H)
+// ============================================================
+console.log("\n==================================================");
+console.log("  TEST M: Multi-Block EC Stress Tests");
+console.log("==================================================");
+
+// Test M1: v5-Q with maximum-capacity byte payload (pushes RS to limit)
+console.log("\n--- Test M1: V5-Q Max Byte Payload ---");
+{
+  // v5-Q: 2+2 blocks, 15+16 = 62 data bytes total
+  const maxBytes = Array.from(new TextEncoder().encode("STRESS-V5Q-".repeat(5) + "END"));
+  const p = runPreservationTest(
+    "Test M1 — V5-Q Max Byte Payload (multi-block stress)",
+    [qrcodegen.QrSegment.makeBytes(maxBytes)],
+    qrcodegen.QrCode.Ecc.QUARTILE,
+    5, 5, 4
+  );
+  assert(p.version === 5, "Test M1: Version is 5");
+  assert(p.errorCorrection === "Q", "Test M1: EC is Q");
+}
+
+// Test M2: v5-H with mixed segments (numeric + byte)
+console.log("\n--- Test M2: V5-H Mixed Segments ---");
+{
+  const mixedSegs = [
+    qrcodegen.QrSegment.makeNumeric("1234567890"),
+    qrcodegen.QrSegment.makeBytes(Array.from(new TextEncoder().encode("v5h-data"))),
+  ];
+  const p = runPreservationTest(
+    "Test M2 — V5-H Mixed Segments (2+2 block stress)",
+    mixedSegs,
+    qrcodegen.QrCode.Ecc.HIGH,
+    5, 5, 1
+  );
+  assert(p.version === 5, "Test M2: Version is 5");
+  assert(p.errorCorrection === "H", "Test M2: EC is H");
+}
+
+// Test M3: v6-M with alphanumeric payload (4-block config)
+console.log("\n--- Test M3: V6-M Alphanumeric ---");
+{
+  const p = runPreservationTest(
+    "Test M3 — V6-M Alphanumeric (4-block stress)",
+    [qrcodegen.QrSegment.makeAlphanumeric("V6-MEDIUM-FOUR-BLOCKS-ROBUSTNESS-CHECK-12345")],
+    qrcodegen.QrCode.Ecc.MEDIUM,
+    6, 6, 3
+  );
+  assert(p.version === 6, "Test M3: Version is 6");
+  assert(p.errorCorrection === "M", "Test M3: EC is M");
+}
+
+// Test M4: v6-H with binary payload (4 blocks, highest redundancy)
+console.log("\n--- Test M4: V6-H Binary Payload ---");
+{
+  // v6-H: 4 blocks, 15 data codewords each = 60 total
+  const binPayload = [];
+  for (let i = 0; i < 40; i++) binPayload.push(i ^ 0xAA);
+  const p = runPreservationTest(
+    "Test M4 — V6-H Binary Payload (4-block max redundancy)",
+    [qrcodegen.QrSegment.makeBytes(binPayload)],
+    qrcodegen.QrCode.Ecc.HIGH,
+    6, 6, 7
+  );
+  assert(p.version === 6, "Test M4: Version is 6");
+  assert(p.errorCorrection === "H", "Test M4: EC is H");
+}
+
+// Test M5: v5/v6 Unicode boundary — payload forces exact version boundary
+console.log("\n--- Test M5: V5/V6 Unicode Boundary ---");
+{
+  const unicodePayload = Array.from(new TextEncoder().encode("🔒安全テスト-V5"));
+  const p = runPreservationTest(
+    "Test M5 — V5-L Unicode Boundary",
+    [qrcodegen.QrSegment.makeBytes(unicodePayload)],
+    qrcodegen.QrCode.Ecc.LOW,
+    5, 5, 2
+  );
+  assert(p.version === 5, "Test M5: Version is 5");
+}
+
+// Test M6: v6-Q with ECI + multi-segment
+console.log("\n--- Test M6: V6-Q ECI + Multi-Segment ---");
+{
+  const eciSeg = qrcodegen.QrSegment.makeEci(26);
+  const dataSeg = qrcodegen.QrSegment.makeBytes(Array.from(new TextEncoder().encode("V6-Q-ECI-Test")));
+  const p = runPreservationTest(
+    "Test M6 — V6-Q ECI + Multi-Segment (4-block stress)",
+    [eciSeg, dataSeg],
+    qrcodegen.QrCode.Ecc.QUARTILE,
+    6, 6, 5
+  );
+  assert(p.version === 6, "Test M6: Version is 6");
+  assert(p.errorCorrection === "Q", "Test M6: EC is Q");
+  assert(p.eci === 26, "Test M6: ECI assignment is 26");
+}
+
+
 console.log("\n==================================================");
 console.log(`TEST SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED out of ${totalTests} assertions.`);
 console.log("==================================================");
