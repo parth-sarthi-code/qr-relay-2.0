@@ -2,359 +2,457 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>QR Sender</title>
+  <title>QR Relay — Scanner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0c0c0f;
-      --surface: #16161a;
-      --surface2: #1e1e24;
-      --border: #2a2a32;
-      --text: #e8e8ed;
-      --text-dim: #8a8a96;
-      --accent: #6c5ce7;
-      --accent-glow: rgba(108, 92, 231, 0.25);
-      --green: #00c853;
-      --red: #ff3d57;
-      --radius: 12px;
+      --bg-app: #090a0f;
+      --bg-card: #111319;
+      --bg-card-hover: #161922;
+      --bg-input: #0c0e14;
+      --border-subtle: #1e222d;
+      --border-medium: #2a3040;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.08);
+      --emerald-border: rgba(16, 185, 129, 0.25);
+      --rose: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
     }
 
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
       height: 100dvh;
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
+      user-select: none;
     }
 
-    .app {
+    .app-layout {
       max-width: 480px;
       height: 100dvh;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      padding: 8px 10px max(10px, env(safe-area-inset-bottom));
-      gap: 8px;
+      padding: 12px 14px max(14px, env(safe-area-inset-bottom));
+      gap: 12px;
       box-sizing: border-box;
       overflow: hidden;
     }
 
-    /* ---- Header ---- */
-    .header {
+    /* ---- Navigation Bar ---- */
+    .nav-bar {
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
-      height: 34px;
-    }
-    .header h1 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .vbadge {
-      display: inline-block;
-      font-size: 0.62rem;
-      font-weight: 700;
-      color: #a29bfe;
-      background: rgba(108, 92, 231, 0.2);
-      border: 1px solid rgba(108, 92, 231, 0.45);
-      border-radius: 6px;
-      padding: 1px 5px;
-      letter-spacing: 0;
-      line-height: 1.2;
-    }
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .switch-viewer-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 4px 9px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      user-select: none;
-      white-space: nowrap;
-    }
-    .switch-viewer-btn:hover {
-      background: var(--surface2);
-      border-color: var(--accent);
-      color: #fff;
-    }
-    .status-strip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 0.74rem;
-      font-weight: 500;
-      font-variant-numeric: tabular-nums;
-    }
-    .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--red);
-      transition: background 0.3s;
-      flex-shrink: 0;
-    }
-    .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .sep {
-      color: var(--border);
-      font-weight: 300;
-      font-size: 0.8rem;
-    }
-    .strip-val {
-      color: var(--text);
-      font-weight: 600;
+      height: 36px;
     }
 
-    /* ---- Camera Wrap (Takes 60% of Screen with Portrait 3:4 Ratio) ---- */
-    .camera-wrap {
-      position: relative;
-      width: 100%;
-      max-width: 100%;
-      height: 60dvh;
-      max-height: 60dvh;
-      aspect-ratio: 3 / 4;
-      margin: 0 auto;
-      border-radius: var(--radius);
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: #000;
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-sm);
+      background: #1e2433;
+      border: 1px solid var(--border-medium);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      color: var(--text-main);
+    }
+    .brand-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+      background: #181d28;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      font-weight: 500;
+      font-family: inherit;
+      padding: 5px 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-medium);
+      color: var(--text-main);
+    }
+
+    .telemetry-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 5px 9px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--rose);
+      transition: background 0.3s;
+    }
+    .status-dot.online {
+      background: var(--emerald);
+    }
+
+    /* ---- Camera Viewfinder Stage ---- */
+    .viewfinder-card {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      background: #000;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       touch-action: none;
     }
-    video {
-      display: block;
+    .viewfinder-card video {
       width: 100%;
       height: 100%;
-      aspect-ratio: 3 / 4;
       object-fit: cover;
+      display: block;
     }
-    .scan-overlay {
+
+    /* Detection Bounding Box */
+    .qr-bounding-box {
       position: absolute;
-      border: 2px solid var(--accent);
-      border-radius: 6px;
-      pointer-events: none;
-      transition: all 0.08s ease-out;
-      box-shadow: 0 0 12px var(--accent-glow);
+      border: 2px solid var(--emerald);
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 4px;
       display: none;
-      z-index: 2;
+      pointer-events: none;
+      z-index: 5;
+      transition: all 0.08s ease-out;
     }
-    .hud-badge {
+
+    /* Status Banner on Viewfinder */
+    .viewfinder-status {
       position: absolute;
-      top: 8px;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(12, 12, 15, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      color: var(--text);
-      font-size: 0.72rem;
-      font-weight: 500;
-      padding: 3px 10px;
-      border-radius: 999px;
+      background: rgba(12, 14, 20, 0.85);
+      border: 1px solid var(--border-medium);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
       pointer-events: none;
-      z-index: 3;
       white-space: nowrap;
-      max-width: 90%;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .viewfinder-status.detected {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--emerald-border);
+      color: var(--emerald);
     }
 
     /* ---- Controls Section ---- */
-    .controls {
+    .controls-card {
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      flex-shrink: 0;
+      gap: 10px;
     }
 
-    /* Ready Button (Primary Action) */
-    .ready-btn {
+    /* Primary Ready/Signal Button */
+    .btn-signal {
       width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: #2563eb;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 11px 16px;
-      border-radius: var(--radius);
-      border: 1px solid rgba(108, 92, 231, 0.45);
-      background: linear-gradient(135deg, #6c5ce7 0%, #4834d4 100%);
-      color: #fff;
-      font-family: inherit;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      cursor: pointer;
-      box-shadow: 0 3px 14px rgba(108, 92, 231, 0.35);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      height: 44px;
+      transition: background 0.15s, transform 0.1s;
     }
-    .ready-btn:hover {
-      background: linear-gradient(135deg, #7d6dfa 0%, #5742e8 100%);
-      box-shadow: 0 5px 18px rgba(108, 92, 231, 0.5);
+    .btn-signal:hover {
+      background: #1d4ed8;
     }
-    .ready-btn:active {
-      transform: scale(0.98);
+    .btn-signal:active {
+      transform: scale(0.99);
     }
-    .ready-btn .btn-icon {
-      font-size: 1.15rem;
-      display: inline-block;
+    .btn-signal.sent {
+      background: #059669;
     }
 
-    /* Feedback state when Ready is clicked (calm confirmation — no alarm/ringing on sender!) */
-    .ready-btn.sent {
-      background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-      border-color: rgba(0, 184, 148, 0.6);
-      box-shadow: 0 3px 12px rgba(0, 184, 148, 0.35);
-    }
-
-    /* Compact Toolbar: Camera & Zoom in ONE slim row */
-    .toolbar-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      height: 38px;
-    }
-    .tool-chip {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0 8px;
+    /* Tooling Row */
+    .tools-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      min-width: 0;
+      gap: 8px;
+      width: 100%;
     }
-    .tool-icon {
-      font-size: 0.85rem;
-      opacity: 0.75;
-      flex-shrink: 0;
-    }
-    select.compact-select {
+
+    .tool-group {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex: 1;
       min-width: 0;
+      height: 38px;
+    }
+    .tool-icon {
+      color: var(--text-dim);
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    select.camera-dropdown {
       background: transparent;
-      color: var(--text);
+      color: var(--text-main);
       border: none;
       font-size: 0.78rem;
+      font-weight: 500;
       font-family: inherit;
       outline: none;
       cursor: pointer;
+      width: 100%;
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
-      padding: 0;
     }
-    select.compact-select option {
-      background: var(--surface2);
-      color: var(--text);
+    select.camera-dropdown option {
+      background: #111319;
+      color: var(--text-main);
     }
-    .tool-chip input[type="range"] {
+
+    .zoom-slider {
       flex: 1;
       min-width: 0;
       accent-color: var(--accent);
       height: 4px;
       cursor: pointer;
     }
-    .zoom-val {
-      font-size: 0.75rem;
+    .zoom-readout {
+      font-size: 0.74rem;
       font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
       min-width: 28px;
       text-align: right;
-      font-variant-numeric: tabular-nums;
-      color: var(--text-dim);
+    }
+
+    .btn-tool {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      height: 38px;
+      padding: 0 11px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .btn-tool:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+    .btn-tool.active {
+      border-color: var(--amber-border);
+      background: var(--amber-bg);
+      color: var(--amber);
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="header">
-      <h1>QR Sender <span class="vbadge">v2.4</span></h1>
-      <div class="header-right">
-        <a href="/viewer.html" class="switch-viewer-btn" title="Switch to QR Viewer">👁️ Viewer</a>
-        <div class="status-strip">
-          <span id="dot" class="dot"></span>
-          <span id="connLabel">Offline</span>
-          <span class="sep">•</span>
-          <span class="strip-val" id="peersVal">S:0 V:0</span>
-          <span class="sep">•</span>
-          <span class="strip-val" id="latencyVal">—</span>
+  <div class="app-layout">
+    <!-- Navigation Bar -->
+    <header class="nav-bar">
+      <div class="brand-group">
+        <div class="brand-mark">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </div>
+        <div class="brand-name">
+          QR Relay <span class="badge-label">Scanner</span>
         </div>
       </div>
-    </div>
 
-    <div class="camera-wrap">
-      <div class="hud-badge" id="statusVal">Starting camera…</div>
+      <div class="nav-actions">
+        <a href="/viewer.html" class="btn-secondary" title="Switch to Viewer display">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          Viewer
+        </a>
+
+        <div class="telemetry-chip">
+          <span id="dot" class="status-dot"></span>
+          <span id="peersVal">S:0 V:0</span>
+          <span style="opacity: 0.3;">|</span>
+          <span id="latencyVal">—</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Camera Viewfinder -->
+    <div class="viewfinder-card" id="cameraWrap">
+      <div class="viewfinder-status" id="statusVal">
+        Initializing camera...
+      </div>
+
       <video id="video" autoplay playsinline muted></video>
-      <div id="scanOverlay" class="scan-overlay"></div>
+      <div id="scanOverlay" class="qr-bounding-box"></div>
     </div>
 
-    <div class="controls">
-      <button id="readyBtn" class="ready-btn" type="button">
-        <span class="btn-icon">🔔</span>
-        <span class="btn-text">Ready</span>
+    <!-- Controls Console -->
+    <section class="controls-card">
+      <button id="readyBtn" class="btn-signal" type="button">
+        <svg id="signalIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        <span id="signalText">Signal Viewer (Ready)</span>
       </button>
 
-      <div class="toolbar-row">
-        <div class="tool-chip">
-          <span class="tool-icon">📷</span>
-          <select id="camSelect" class="compact-select"></select>
+      <div class="tools-row">
+        <div class="tool-group" style="flex: 1.2;">
+          <span class="tool-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+          </span>
+          <select id="camSelect" class="camera-dropdown"></select>
         </div>
-        <div class="tool-chip">
-          <span class="tool-icon">🔍</span>
-          <input id="zoomSlider" type="range" min="1" max="1" step="0.1" value="1" disabled />
-          <span class="zoom-val" id="zoomVal">1.0×</span>
+
+        <button id="torchBtn" class="btn-tool" type="button" title="Toggle camera flashlight">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 2h6l2 7H7l2-7z"></path>
+            <path d="M7 9v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9"></path>
+            <line x1="12" y1="12" x2="12" y2="16"></line>
+          </svg>
+        </button>
+
+        <div class="tool-group">
+          <span class="tool-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </span>
+          <input id="zoomSlider" class="zoom-slider" type="range" min="1" max="1" step="0.1" value="1" disabled />
+          <span class="zoom-readout" id="zoomVal">1.0×</span>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 
-  <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="/static/js/qrcodegen.js"></script>
+  <script src="/static/js/jsqr-enhanced.js"></script>
+  <script src="/static/js/qr-preserver.js"></script>
   <script>
-    /* ========== DOM refs ========== */
-    const video      = document.getElementById('video');
-    const overlay    = document.getElementById('scanOverlay');
-    const dot        = document.getElementById('dot');
-    const connLabel  = document.getElementById('connLabel');
-    const latencyVal = document.getElementById('latencyVal');
-    const peersVal   = document.getElementById('peersVal');
-    const statusVal  = document.getElementById('statusVal');
-    const camSelect  = document.getElementById('camSelect');
-    const zoomSlider = document.getElementById('zoomSlider');
-    const zoomVal    = document.getElementById('zoomVal');
-    const readyBtn   = document.getElementById('readyBtn');
+    /* ========== DOM Elements ========== */
+    const video        = document.getElementById('video');
+    const cameraWrap   = document.getElementById('cameraWrap');
+    const overlay      = document.getElementById('scanOverlay');
+    const dot          = document.getElementById('dot');
+    const latencyVal   = document.getElementById('latencyVal');
+    const peersVal     = document.getElementById('peersVal');
+    const statusVal    = document.getElementById('statusVal');
+    const camSelect    = document.getElementById('camSelect');
+    const zoomSlider   = document.getElementById('zoomSlider');
+    const zoomVal      = document.getElementById('zoomVal');
+    const torchBtn     = document.getElementById('torchBtn');
+    const readyBtn     = document.getElementById('readyBtn');
+    const signalIcon   = document.getElementById('signalIcon');
+    const signalText   = document.getElementById('signalText');
 
     /* ========== State ========== */
     const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -363,17 +461,19 @@
     let videoTrack = null;
     let activeStream = null;
     let lastQRText = null;
+    let lastSeenQrTime = 0;
     let scanStarted = false;
     let lastScanTime = 0;
     let viewerCount = 0;
+    let torchOn = false;
 
-    // Offscreen canvases — allocated once, reused every frame
+    // Offscreen detection & ROI crop canvases
     const detectCanvas = document.createElement('canvas');
     const detectCtx    = detectCanvas.getContext('2d', { willReadFrequently: true });
-    const cropCanvas   = document.createElement('canvas');
-    const cropCtx      = cropCanvas.getContext('2d');
+    const roiCanvas    = document.createElement('canvas');
+    const roiCtx       = roiCanvas.getContext('2d', { willReadFrequently: true });
 
-    // BarcodeDetector singleton (if supported)
+    // Native BarcodeDetector (if available on Chrome/Android)
     let nativeDetector = null;
     let useNative = false;
     (async () => {
@@ -384,54 +484,51 @@
             nativeDetector = new BarcodeDetector({ formats: ['qr_code'] });
             useNative = true;
           }
-        } catch (_) { /* fallback to jsQR */ }
+        } catch (_) {}
       }
     })();
 
-    /* ========== Ready Signal (Rings Viewers) ========== */
-    let readyFeedbackTimer = null;
+    /* ========== Ready / Attention Signaling ========== */
+    let signalTimer = null;
 
     function sendReadySignal() {
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: 'ring', action: 'start' }));
         try { localStorage.setItem('sender_sent_ring', String(Date.now())); } catch (_) {}
 
-        const icon = readyBtn ? readyBtn.querySelector('.btn-icon') : null;
-        const text = readyBtn ? readyBtn.querySelector('.btn-text') : null;
+        readyBtn.classList.add('sent');
+        signalIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+        signalText.textContent = 'Viewer Signaled';
 
-        if (readyBtn) readyBtn.classList.add('sent');
-        if (icon) icon.textContent = '✓';
-        if (text) text.textContent = 'Ready Sent';
-
+        statusVal.className = 'viewfinder-status detected';
         statusVal.textContent = viewerCount > 0
-          ? `Ready signal sent to ${viewerCount} viewer(s)`
-          : 'Ready signal sent (No viewers online)';
+          ? `Signal delivered to ${viewerCount} viewer(s)`
+          : 'Signal sent (No viewers connected)';
 
-        clearTimeout(readyFeedbackTimer);
-        readyFeedbackTimer = setTimeout(() => {
-          if (readyBtn) readyBtn.classList.remove('sent');
-          if (icon) icon.textContent = '🔔';
-          if (text) text.textContent = 'Ready';
-        }, 2000);
+        clearTimeout(signalTimer);
+        signalTimer = setTimeout(() => {
+          readyBtn.classList.remove('sent');
+          signalIcon.innerHTML = `
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          `;
+          signalText.textContent = 'Signal Viewer (Ready)';
+        }, 2200);
       } else {
-        statusVal.textContent = 'Cannot send: Offline';
+        statusVal.textContent = 'Disconnected from relay';
       }
     }
 
-    if (readyBtn) {
-      readyBtn.addEventListener('click', sendReadySignal);
-    }
+    readyBtn.addEventListener('click', sendReadySignal);
 
-    /* ========== WebSocket ========== */
+    /* ========== WebSocket Connection ========== */
     let pingTimer = null;
 
     function connectWS() {
       socket = new WebSocket(wsUrl);
-      socket.binaryType = 'arraybuffer';
 
       socket.addEventListener('open', () => {
-        dot.classList.add('on');
-        connLabel.textContent = 'Online';
+        dot.classList.add('online');
         socket.send(JSON.stringify({ type: 'role', role: 'sender' }));
 
         clearInterval(pingTimer);
@@ -449,13 +546,13 @@
             viewerCount = msg.viewers || 0;
             peersVal.textContent = `S:${msg.senders} V:${msg.viewers}`;
           }
-        } catch (_) { /* binary or non-JSON — ignore on sender */ }
+        } catch (_) {}
       });
 
       socket.addEventListener('close', () => {
         clearInterval(pingTimer);
-        dot.classList.remove('on');
-        connLabel.textContent = 'Offline';
+        dot.classList.remove('online');
+        peersVal.textContent = 'Offline';
         setTimeout(connectWS, 1500);
       });
 
@@ -463,162 +560,169 @@
         socket.close();
       });
     }
-    connectWS();
 
-    /* ========== Camera ========== */
+    /* ========== Camera Engine ========== */
     async function startCamera(deviceId) {
+      if (activeStream) {
+        activeStream.getTracks().forEach((t) => t.stop());
+        activeStream = null;
+        videoTrack = null;
+      }
+
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const videoConstraints = {
+        width:  { ideal: 1920, min: 640 },
+        height: { ideal: 1080, min: 480 },
+      };
+
+      if (deviceId) {
+        videoConstraints.deviceId = { exact: deviceId };
+      } else {
+        videoConstraints.facingMode = { ideal: 'environment' };
+      }
+
+      if (isMobile) {
+        videoConstraints.focusMode = { ideal: 'continuous' };
+        videoConstraints.exposureMode = { ideal: 'continuous' };
+      }
+
       try {
-        if (activeStream) activeStream.getTracks().forEach(t => t.stop());
-
-        const constraint = deviceId
-          ? { deviceId: { exact: deviceId } }
-          : { facingMode: 'environment' };
-
-        // Optimized stream for phone hardware OIS & minimal motion blur:
-        // 1080p stream at steady 30fps enables OEM camera HAL optical stabilization
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            ...constraint,
-            width: { ideal: 1920, min: 1280 },
-            height: { ideal: 1080, min: 720 },
-            frameRate: { ideal: 30, min: 24 },
-          },
+          video: videoConstraints,
           audio: false,
         });
 
         activeStream = stream;
         video.srcObject = stream;
-        videoTrack = stream.getVideoTracks()[0] || null;
+        videoTrack = stream.getVideoTracks()[0];
 
-        // Apply continuous autofocus & stabilization hints where supported by OEM HAL
-        if (videoTrack?.getCapabilities) {
-          try {
-            const caps = videoTrack.getCapabilities();
-            const advanced = [];
-            if (caps.focusMode && caps.focusMode.includes('continuous')) {
-              advanced.push({ focusMode: 'continuous' });
-            }
-            if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
-              advanced.push({ exposureMode: 'continuous' });
-            }
-            if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
-              advanced.push({ whiteBalanceMode: 'continuous' });
-            }
-            if (advanced.length > 0) {
-              await videoTrack.applyConstraints({ advanced });
-            }
-          } catch (_) {}
-        }
-
-        setupZoom(videoTrack);
-        await populateCameras(videoTrack?.getSettings?.()?.deviceId);
-        statusVal.textContent = 'Camera active — scanning';
+        await video.play();
+        setupZoom();
+        setupTorch();
 
         if (!scanStarted) {
           scanStarted = true;
           requestAnimationFrame(tick);
         }
+
+        await populateCameras();
+        statusVal.className = 'viewfinder-status';
+        statusVal.textContent = 'Align QR in frame';
       } catch (err) {
-        statusVal.textContent = `Camera error: ${err.message}`;
+        console.error('Camera error:', err);
+        statusVal.textContent = 'Camera blocked: ' + err.message;
       }
     }
 
-    async function populateCameras(currentId) {
-      if (!navigator.mediaDevices?.enumerateDevices) return;
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams = devices.filter(d => d.kind === 'videoinput');
-      camSelect.innerHTML = '';
-      cams.forEach((c, i) => {
-        const opt = document.createElement('option');
-        opt.value = c.deviceId;
-        opt.textContent = c.label || `Camera ${i + 1}`;
-        camSelect.appendChild(opt);
-      });
-      if (currentId) camSelect.value = currentId;
+    async function populateCameras() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((d) => d.kind === 'videoinput');
+
+        camSelect.innerHTML = '';
+        videoDevices.forEach((dev, idx) => {
+          const opt = document.createElement('option');
+          opt.value = dev.deviceId;
+          opt.textContent = dev.label || `Camera ${idx + 1}`;
+          camSelect.appendChild(opt);
+        });
+
+        if (videoTrack) {
+          const curId = videoTrack.getSettings().deviceId;
+          if (curId) camSelect.value = curId;
+        }
+      } catch (_) {}
     }
 
     camSelect.addEventListener('change', () => {
       if (camSelect.value) startCamera(camSelect.value);
     });
 
-    /* ========== Zoom & Pinch-to-Zoom ========== */
-    function applyZoom(val) {
-      if (!videoTrack?.getCapabilities) return;
+    /* ========== Torch (Flashlight) Support ========== */
+    function setupTorch() {
+      if (!videoTrack || !videoTrack.getCapabilities) return;
       const caps = videoTrack.getCapabilities();
+      if (caps.torch) {
+        torchBtn.style.display = 'inline-flex';
+        torchBtn.onclick = async () => {
+          torchOn = !torchOn;
+          try {
+            await videoTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
+            torchBtn.classList.toggle('active', torchOn);
+          } catch (_) {}
+        };
+      } else {
+        torchBtn.style.display = 'none';
+      }
+    }
+
+    /* ========== Zoom Controls ========== */
+    function setupZoom() {
+      if (!videoTrack) return;
+      const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+
+      if (caps.zoom) {
+        zoomSlider.min = caps.zoom.min;
+        zoomSlider.max = caps.zoom.max;
+        zoomSlider.step = caps.zoom.step || 0.1;
+        const curZoom = videoTrack.getSettings().zoom || caps.zoom.min;
+        zoomSlider.value = curZoom;
+        zoomVal.textContent = `${Number(curZoom).toFixed(1)}×`;
+        zoomSlider.disabled = false;
+
+        zoomSlider.oninput = () => applyZoom(parseFloat(zoomSlider.value));
+      } else {
+        zoomSlider.disabled = true;
+        zoomVal.textContent = '1.0×';
+      }
+
+      setupPinchToZoom(caps);
+    }
+
+    function applyZoom(val) {
+      if (!videoTrack || !videoTrack.applyConstraints) return;
+      const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
       if (!caps.zoom) return;
-      const clamped = Math.min(Math.max(val, caps.zoom.min ?? 1), caps.zoom.max ?? 1);
-      const rounded = Math.round(clamped * 10) / 10;
-      zoomSlider.value = String(rounded);
-      zoomVal.textContent = `${rounded.toFixed(1)}×`;
-      try {
-        videoTrack.applyConstraints({ advanced: [{ zoom: rounded }] });
-      } catch (_) {}
+
+      const clamped = Math.max(caps.zoom.min, Math.min(caps.zoom.max, val));
+      videoTrack.applyConstraints({ advanced: [{ zoom: clamped }] }).catch(() => {});
+      zoomSlider.value = clamped;
+      zoomVal.textContent = `${clamped.toFixed(1)}×`;
     }
 
-    function setupZoom(track) {
-      if (!track?.getCapabilities) { zoomSlider.disabled = true; return; }
-      const caps = track.getCapabilities();
-      if (!caps.zoom) { zoomSlider.disabled = true; return; }
-      zoomSlider.min = String(caps.zoom.min ?? 1);
-      zoomSlider.max = String(caps.zoom.max ?? 1);
-      zoomSlider.step = String(caps.zoom.step ?? 0.1);
-      const init = Number(track.getSettings?.()?.zoom ?? caps.zoom.min ?? 1);
-      zoomSlider.value = String(init);
-      zoomVal.textContent = `${init.toFixed(1)}×`;
-      zoomSlider.disabled = false;
-      zoomSlider.oninput = () => {
-        applyZoom(Number(zoomSlider.value));
-      };
-    }
+    function setupPinchToZoom(caps) {
+      if (!caps.zoom) return;
+      let pinchStartDist = 0;
+      let pinchStartZoom = 1;
 
-    // Touch gesture pinch-to-zoom on camera-wrap
-    const cameraWrapElem = document.querySelector('.camera-wrap');
-    let pinchStartDist = 0;
-    let pinchStartZoom = 1;
-
-    if (cameraWrapElem) {
-      cameraWrapElem.addEventListener('touchstart', (e) => {
+      cameraWrap.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
           pinchStartDist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          pinchStartZoom = Number(zoomSlider.value) || 1;
+          pinchStartZoom = parseFloat(zoomSlider.value) || 1;
         }
       }, { passive: true });
 
-      cameraWrapElem.addEventListener('touchmove', (e) => {
+      cameraWrap.addEventListener('touchmove', (e) => {
         if (e.touches.length === 2 && pinchStartDist > 0 && !zoomSlider.disabled) {
-          const currentDist = Math.hypot(
+          const dist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          const factor = currentDist / pinchStartDist;
-          applyZoom(pinchStartZoom * factor);
+          applyZoom(pinchStartZoom * (dist / pinchStartDist));
         }
       }, { passive: true });
 
-      cameraWrapElem.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) {
-          pinchStartDist = 0;
-        }
+      cameraWrap.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) pinchStartDist = 0;
       }, { passive: true });
     }
 
-    /* ========== Detection & Crop Loop ========== */
-    const SCAN_INTERVAL = 80;  // ms — ~12 Hz
-    const DETECT_MAX_DIM = 480; // downscale for fast detection
-    const CROP_SIZE = 300;      // export crop canvas size
-
-    // Pre-computed LUT for grayscale + contrast boost (factor=3.5, midpoint=128)
-    // Built once at startup — replaces per-pixel float math in the hot scan path (~10x faster)
-    const CONTRAST_LUT = new Uint8Array(256);
-    (() => {
-      const FACTOR = 3.5;
-      for (let i = 0; i < 256; i++) {
-        CONTRAST_LUT[i] = Math.max(0, Math.min(255, Math.round(FACTOR * (i - 128) + 128)));
-      }
-    })();
+    /* ========== Detection & Exact Preservation Loop ========== */
+    const SCAN_INTERVAL = 80;   // ms — ~12 Hz
+    const DETECT_MAX_DIM = 480;  // fast downscaled frame
 
     async function tick() {
       requestAnimationFrame(tick);
@@ -628,7 +732,6 @@
       if (now - lastScanTime < SCAN_INTERVAL) return;
       lastScanTime = now;
 
-      // ---- Downscale for detection ----
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       if (!vw || !vh) return;
@@ -643,110 +746,102 @@
       }
       detectCtx.drawImage(video, 0, 0, dw, dh);
 
+      let code = null;
       let qrText = null;
-      let bbox = null; // { x, y, w, h } in DETECT canvas coords
+      let bbox = null;
 
-      // ---- Try native BarcodeDetector ----
-      if (useNative && nativeDetector) {
+      // 1. Primary: Enhanced jsQR
+      try {
+        const imgData = detectCtx.getImageData(0, 0, dw, dh);
+        code = jsQR(imgData.data, dw, dh);
+        if (code && code.data) {
+          qrText = code.data;
+          const loc = code.location;
+          const minX = Math.min(loc.topLeftCorner.x, loc.topRightCorner.x, loc.bottomLeftCorner.x, loc.bottomRightCorner.x);
+          const maxX = Math.max(loc.topLeftCorner.x, loc.topRightCorner.x, loc.bottomLeftCorner.x, loc.bottomRightCorner.x);
+          const minY = Math.min(loc.topLeftCorner.y, loc.topRightCorner.y, loc.bottomLeftCorner.y, loc.bottomRightCorner.y);
+          const maxY = Math.max(loc.topLeftCorner.y, loc.topRightCorner.y, loc.bottomLeftCorner.y, loc.bottomRightCorner.y);
+          bbox = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+        }
+      } catch (_) {}
+
+      // 2. Fallback: Native BarcodeDetector + ROI extraction
+      if (!code && useNative && nativeDetector) {
         try {
           const results = await nativeDetector.detect(detectCanvas);
           if (results.length > 0) {
             qrText = results[0].rawValue;
             const bb = results[0].boundingBox;
             bbox = { x: bb.x, y: bb.y, w: bb.width, h: bb.height };
-          }
-        } catch (_) { /* fall through to jsQR */ }
-      }
 
-      // ---- jsQR fallback ----
-      if (!qrText) {
-        try {
-          const imgData = detectCtx.getImageData(0, 0, dw, dh);
-          const code = jsQR(imgData.data, dw, dh);
-          if (code && code.data) {
-            qrText = code.data;
-            // Compute bounding box from corner locations
-            const loc = code.location;
-            const xs = [loc.topLeftCorner.x, loc.topRightCorner.x, loc.bottomLeftCorner.x, loc.bottomRightCorner.x];
-            const ys = [loc.topLeftCorner.y, loc.topRightCorner.y, loc.bottomLeftCorner.y, loc.bottomRightCorner.y];
-            const minX = Math.min(...xs);
-            const minY = Math.min(...ys);
-            bbox = {
-              x: minX,
-              y: minY,
-              w: Math.max(...xs) - minX,
-              h: Math.max(...ys) - minY,
-            };
+            try {
+              const cropPad = 0.2;
+              const fx = bbox.x / scale;
+              const fy = bbox.y / scale;
+              const fw = bbox.w / scale;
+              const fh = bbox.h / scale;
+              const side = Math.max(fw, fh);
+              const paddedSide = side * (1 + cropPad * 2);
+              const cx = Math.max(0, Math.min(vw - 1, (fx + fw / 2) - paddedSide / 2));
+              const cy = Math.max(0, Math.min(vh - 1, (fy + fh / 2) - paddedSide / 2));
+              const cw = Math.min(paddedSide, vw - cx);
+              const ch = Math.min(paddedSide, vh - cy);
+
+              if (cw > 20 && ch > 20) {
+                const roiDim = Math.min(480, Math.max(Math.round(cw), Math.round(ch)));
+                roiCanvas.width = roiDim;
+                roiCanvas.height = roiDim;
+                roiCtx.drawImage(video, cx, cy, cw, ch, 0, 0, roiDim, roiDim);
+                const roiData = roiCtx.getImageData(0, 0, roiDim, roiDim);
+                const roiCode = jsQR(roiData.data, roiDim, roiDim);
+                if (roiCode && roiCode.data) code = roiCode;
+              }
+            } catch (_) {}
+
+            if (!code) code = { data: qrText };
           }
         } catch (_) {}
       }
 
-      // ---- No QR found ----
+      // No QR in frame
       if (!qrText || !bbox) {
         overlay.style.display = 'none';
+        if (now - lastSeenQrTime > 2000) {
+          lastQRText = null;
+          statusVal.className = 'viewfinder-status';
+          statusVal.textContent = 'Align QR in frame';
+        }
         return;
       }
+      lastSeenQrTime = now;
 
-      // ---- Show overlay on the video element ----
+      // Update overlay box
       showOverlay(bbox, scale);
 
-      // ---- Only send if QR content changed ----
-      if (qrText === lastQRText) return;
-      lastQRText = qrText;
+      // Preserve QR locally
+      const preserved = QrPreserver.createPreservedQr(code);
+      if (!preserved) return;
 
-      // ---- Crop from FULL-RES video frame ----
-      // Convert detect-canvas bbox back to full-res coords
-      const pad = 0.25; // 25% extra area around QR
-      const fx = bbox.x / scale;
-      const fy = bbox.y / scale;
-      const fw = bbox.w / scale;
-      const fh = bbox.h / scale;
+      const signature = preserved.compressedMatrix || preserved.payload;
+      if (signature === lastQRText) return;
+      lastQRText = signature;
 
-      // Make it square: use the larger side, then add padding
-      const side = Math.max(fw, fh);
-      const padded = side * (1 + pad * 2);
-      // Center the square on the QR center
-      const centerX = fx + fw / 2;
-      const centerY = fy + fh / 2;
-      const cx = Math.max(0, Math.round(centerX - padded / 2));
-      const cy = Math.max(0, Math.round(centerY - padded / 2));
-      const cw = Math.min(Math.round(padded), vw - cx);
-      const ch = Math.min(Math.round(padded), vh - cy);
-      // Keep it square after clamping
-      const cropSide = Math.min(cw, ch);
-
-      cropCanvas.width = CROP_SIZE;
-      cropCanvas.height = CROP_SIZE;
-      cropCtx.drawImage(video, cx, cy, cropSide, cropSide, 0, 0, CROP_SIZE, CROP_SIZE);
-
-      // ---- Apply Grayscale & Boost Contrast (LUT — pre-computed at startup) ----
-      try {
-        const imgData = cropCtx.getImageData(0, 0, CROP_SIZE, CROP_SIZE);
-        const d = imgData.data;
-        // Single-pass: ITU-R BT.601 luminance → contrast LUT index (no floats in loop)
-        for (let i = 0; i < d.length; i += 4) {
-          const gray = CONTRAST_LUT[Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2])];
-          d[i] = d[i + 1] = d[i + 2] = gray;
-        }
-        cropCtx.putImageData(imgData, 0, 0);
-      } catch (e) {
-        console.error("Failed to apply grayscale/contrast filter:", e);
-      }
-
-      // ---- Compress & send ----
+      // Broadcast preserved QR via WebSocket
       const t0 = performance.now();
-      const decodedText = qrText; // capture for closure
-      cropCanvas.toBlob((blob) => {
-        if (!blob) return;
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(blob);
-          const elapsed = Math.round(performance.now() - t0);
-          latencyVal.textContent = `${elapsed}ms`;
-          statusVal.textContent = `Sent crop (${(blob.size / 1024).toFixed(1)} KB)`;
-        } else {
-          statusVal.textContent = 'Detected — WS not connected';
-        }
-      }, 'image/jpeg', 0.9);
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'qr_preserved',
+          qr: preserved.toJSON(),
+        }));
+        const elapsed = Math.round(performance.now() - t0);
+        latencyVal.textContent = `${elapsed}ms`;
+        const ecStr = preserved.errorCorrection ? `EC:${preserved.errorCorrection}` : '';
+        const maskStr = preserved.maskPattern !== null ? `M${preserved.maskPattern}` : '';
+        statusVal.className = 'viewfinder-status detected';
+        statusVal.textContent = `Transmitted: V${preserved.version || '?'} ${ecStr} ${maskStr} [${preserved.mode}]`;
+      } else {
+        statusVal.textContent = 'Detected — Relay offline';
+      }
     }
 
     function showOverlay(bbox, scale) {
@@ -755,7 +850,6 @@
       const vh = video.videoHeight;
       if (!vw || !vh || !rect.width || !rect.height) return;
 
-      // Calculate object-fit: cover geometry
       const videoRatio = vw / vh;
       const elemRatio = rect.width / rect.height;
       let renderW, renderH, offsetX, offsetY;
@@ -785,7 +879,8 @@
       overlay.style.height = `${Math.round(oh)}px`;
     }
 
-    /* ========== Init ========== */
+    /* ========== Initialize ========== */
+    connectWS();
     startCamera();
   </script>
 </body>

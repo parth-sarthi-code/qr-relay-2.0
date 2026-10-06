@@ -6,362 +6,663 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>QR Viewer</title>
+  <title>QR Relay — Viewer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0c0c0f;
-      --surface: #16161a;
-      --border: #2a2a32;
-      --text: #e8e8ed;
-      --text-dim: #8a8a96;
-      --accent: #6c5ce7;
-      --green: #00c853;
-      --red: #ff3d57;
-      --radius: 12px;
+      --bg-app: #090a0f;
+      --bg-card: #111319;
+      --bg-card-hover: #161922;
+      --bg-input: #0c0e14;
+      --border-subtle: #1e222d;
+      --border-medium: #2a3040;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --emerald: #10b981;
+      --emerald-bg: rgba(16, 185, 129, 0.08);
+      --emerald-border: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.08);
+      --amber-border: rgba(245, 158, 11, 0.25);
+      --sky: #0284c7;
+      --sky-bg: rgba(2, 132, 199, 0.08);
+      --sky-border: rgba(2, 132, 199, 0.25);
+      --rose: #ef4444;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
     }
 
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       -webkit-font-smoothing: antialiased;
+      padding: 24px 16px 40px;
     }
 
-    .app {
-      max-width: 600px;
+    .container {
       width: 100%;
-      padding: 20px;
+      max-width: 540px;
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 16px;
     }
 
-    /* ---- Header ---- */
-    .header {
+    /* ---- Navigation Header ---- */
+    .nav-bar {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding-bottom: 4px;
     }
-    .header h1 {
-      font-size: 1.3rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+
+    .app-brand {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
     }
-    .vbadge {
-      display: inline-block;
-      font-size: 0.65rem;
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: #1e2433;
+      border: 1px solid var(--border-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+    }
+    .brand-name {
+      font-size: 0.95rem;
       font-weight: 700;
-      color: #a29bfe;
-      background: rgba(108, 92, 231, 0.2);
-      border: 1px solid rgba(108, 92, 231, 0.45);
-      border-radius: 6px;
-      padding: 1px 6px;
-      letter-spacing: 0;
-      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .status-pill {
+    .badge-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+      background: #181d28;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-secondary {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 5px 12px;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
       font-size: 0.78rem;
       font-weight: 500;
+      font-family: inherit;
+      padding: 6px 11px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
     }
-    .dot {
-      width: 8px; height: 8px;
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-medium);
+      color: var(--text-main);
+    }
+    .btn-secondary.active {
+      border-color: var(--emerald-border);
+      background: var(--emerald-bg);
+      color: var(--emerald);
+    }
+
+    .conn-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: var(--red);
+      background: var(--rose);
       transition: background 0.3s;
     }
-    .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.online {
+      background: var(--emerald);
+    }
 
-    /* ---- QR Image Display ---- */
-    .qr-frame {
+    /* ---- Alert Notification Bar ---- */
+    .alert-banner {
       width: 100%;
-      max-width: 420px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .alert-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-icon {
+      color: var(--rose);
+      display: flex;
+    }
+    .alert-title {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .alert-subtitle {
+      font-size: 0.74rem;
+      color: #fca5a5;
+    }
+    .alert-dismiss {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 11px;
+      cursor: pointer;
+    }
+    .alert-dismiss:hover { background: #dc2626; }
+
+    /* ---- Primary Stage: QR Canvas View ---- */
+    .stage-card {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .qr-viewport {
+      width: 100%;
+      max-width: 360px;
       aspect-ratio: 1 / 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: #ffffff;
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
-    .qr-frame img {
+    .qr-canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: none;
+    }
+    .qr-canvas.visible { display: block; }
+    .qr-img {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: none;
     }
-    .qr-frame img.visible { display: block; }
-    .placeholder {
-      color: var(--text-dim);
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-align: center;
-      padding: 20px;
-    }
-    .placeholder.hidden { display: none; }
+    .qr-img.visible { display: block; }
 
-    /* Subtle flash on update */
-    @keyframes flash {
-      0% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.5); }
-      100% { box-shadow: 0 0 0 0 transparent; }
-    }
-    .qr-frame.flash {
-      animation: flash 0.35s ease-out;
-    }
-
-    /* ---- Info Bar ---- */
-    .info-bar {
-      width: 100%;
-      max-width: 420px;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-    .info-cell {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      text-align: center;
-    }
-    .info-label {
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-dim);
-      margin-bottom: 4px;
-    }
-    .info-value {
-      font-size: 1rem;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* ---- Header Right & Audio Pill ---- */
-    .header-right {
+    /* Empty state */
+    .empty-state {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
+      text-align: center;
+      padding: 40px 20px;
+      gap: 12px;
+      color: var(--text-dim);
     }
-    .audio-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 5px 12px;
+    .empty-icon {
+      color: var(--text-dim);
+      opacity: 0.6;
+    }
+    .empty-heading {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .empty-sub {
       font-size: 0.78rem;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      user-select: none;
-    }
-    .audio-pill:hover {
-      background: var(--surface2);
-      border-color: var(--accent);
-    }
-    .audio-pill.unmuted {
-      border-color: rgba(0, 200, 83, 0.4);
-      color: #7bed9f;
-    }
-    .audio-pill.muted {
-      border-color: rgba(255, 61, 87, 0.4);
-      color: #ff6b81;
+      color: var(--text-dim);
+      max-width: 280px;
+      line-height: 1.45;
     }
 
-    /* ---- Ready Alert Banner ---- */
-    .ready-banner {
+    /* ---- Preservation Inspector / Spec Panel ---- */
+    .inspector-card {
       width: 100%;
-      max-width: 420px;
-      background: linear-gradient(135deg, rgba(255, 61, 87, 0.25) 0%, rgba(214, 48, 49, 0.4) 100%);
-      border: 2px solid #ff3d57;
-      border-radius: var(--radius);
-      padding: 12px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .inspector-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      box-shadow: 0 0 25px rgba(255, 61, 87, 0.45);
-      animation: alertPulse 0.9s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      cursor: pointer;
     }
-    .banner-content {
+    .mode-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: var(--radius-sm);
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .mode-pill.exact {
+      background: var(--emerald-bg);
+      border: 1px solid var(--emerald-border);
+      color: var(--emerald);
+    }
+    .mode-pill.structural {
+      background: var(--sky-bg);
+      border: 1px solid var(--sky-border);
+      color: var(--sky);
+    }
+    .mode-pill.payload {
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      color: var(--amber);
+    }
+
+    /* Property Inspector Grid */
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .property-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .prop-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .prop-label {
+      font-size: 0.67rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .prop-value {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .verification-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 0;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
     }
-    .banner-icon-wrap {
-      font-size: 1.6rem;
-      animation: sirenRotate 0.6s infinite alternate;
-      line-height: 1;
+    .verification-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--emerald);
+      font-family: 'JetBrains Mono', monospace;
     }
-    .banner-text {
-      min-width: 0;
+
+    /* Payload Section */
+    .payload-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .banner-title {
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      color: #fff;
-    }
-    .banner-sub {
+    .payload-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 0.72rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.85);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
-    .dismiss-btn {
-      background: #ff3d57;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-family: inherit;
+    .payload-content {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      word-break: break-all;
+      max-height: 90px;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    /* Actions Toolbar */
+    .action-toolbar {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-action {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #171b26;
+      border: 1px solid var(--border-medium);
+      color: var(--text-main);
       font-size: 0.8rem;
-      font-weight: 700;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      white-space: nowrap;
-      box-shadow: 0 2px 10px rgba(255, 61, 87, 0.5);
-      transition: all 0.2s ease;
-      flex-shrink: 0;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
-    .dismiss-btn:hover {
-      background: #ff526c;
-      transform: scale(1.04);
-      box-shadow: 0 4px 16px rgba(255, 61, 87, 0.7);
+    .btn-action:hover {
+      background: #202636;
+      border-color: #3b4255;
     }
-    .dismiss-btn:active {
-      transform: scale(0.98);
+    .btn-action:active {
+      background: #141720;
     }
 
-    /* Screen edge flashing & frame border when alarm is active */
-    body.alarm-active {
-      box-shadow: inset 0 0 45px rgba(255, 61, 87, 0.45);
-      animation: screenEdgeFlash 0.5s infinite alternate;
+    /* ---- System Telemetry Footer ---- */
+    .telemetry-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
     }
-    .qr-frame.alarm-border {
-      border-color: #ff3d57 !important;
-      box-shadow: 0 0 30px rgba(255, 61, 87, 0.6) !important;
+    .telemetry-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-
-    @keyframes alertPulse {
-      0% {
-        box-shadow: 0 0 15px rgba(255, 61, 87, 0.35);
-        transform: scale(1);
-      }
-      100% {
-        box-shadow: 0 0 32px rgba(255, 61, 87, 0.8);
-        transform: scale(1.015);
-      }
-    }
-    @keyframes sirenRotate {
-      0% { transform: rotate(-10deg) scale(0.95); }
-      100% { transform: rotate(10deg) scale(1.15); }
-    }
-    @keyframes screenEdgeFlash {
-      0% { box-shadow: inset 0 0 20px rgba(255, 61, 87, 0.25); }
-      100% { box-shadow: inset 0 0 65px rgba(255, 61, 87, 0.7); }
+    .telemetry-val {
+      color: var(--text-muted);
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="header">
-      <h1>QR Viewer <span class="vbadge">v2.4</span></h1>
-      <div class="header-right">
-        <a href="/sender.html" class="audio-pill" style="text-decoration:none;" title="Switch to QR Sender">📷 Sender</a>
-        <button id="audioToggleBtn" class="audio-pill muted" type="button" title="Audio Alarm Status: Click to test or enable loud ring">
-          <span id="audioIcon">🔇</span>
-          <span id="audioText">Click to Enable Sound</span>
+  <div class="container">
+    <!-- Navigation & Utility Bar -->
+    <header class="nav-bar">
+      <div class="app-brand">
+        <div class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </div>
+        <div class="brand-name">
+          QR Relay <span class="badge-label">Viewer</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <a href="/sender.html" class="btn-secondary" title="Open camera scanner">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          Scanner
+        </a>
+
+        <button id="audioToggleBtn" class="btn-secondary" type="button" title="Toggle audio alert chime">
+          <svg id="audioIconSvg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+            <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+          <span id="audioLabel">Alert Sound Off</span>
         </button>
-        <div class="status-pill">
-          <span id="dot" class="dot"></span>
-          <span id="connLabel">Offline</span>
+
+        <div class="conn-indicator">
+          <span id="dot" class="status-dot"></span>
+          <span id="connLabel">Connecting</span>
         </div>
       </div>
-    </div>
+    </header>
 
-    <!-- Ready Alert Banner -->
-    <div id="readyBanner" class="ready-banner" style="display: none;">
-      <div class="banner-content">
-        <div class="banner-icon-wrap">
-          <span class="banner-siren">🚨</span>
+    <!-- Urgent Sender Signal Alert -->
+    <div id="readyBanner" class="alert-banner" style="display: none;">
+      <div class="alert-info">
+        <span class="alert-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </span>
+        <div>
+          <div class="alert-title">Sender signaled ready</div>
+          <div class="alert-subtitle" id="bannerSub">Sender operator triggered attention call</div>
         </div>
-        <div class="banner-text">
-          <div class="banner-title">SENDER IS READY!</div>
-          <div class="banner-sub" id="bannerSub">Ringing at max volume…</div>
+      </div>
+      <button id="dismissBtn" class="alert-dismiss" type="button">Dismiss</button>
+    </div>
+
+    <!-- Main QR Stage Card -->
+    <section class="stage-card">
+      <div class="qr-viewport" id="qrViewport">
+        <canvas id="qrCanvas" class="qr-canvas"></canvas>
+        <img id="qrImg" class="qr-img" alt="QR Code" />
+
+        <div class="empty-state" id="placeholder">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </div>
+          <div>
+            <div class="empty-heading">No QR symbol received</div>
+            <div class="empty-sub">Point the scanner camera at a QR code to reproduce its exact matrix here.</div>
+          </div>
         </div>
       </div>
-      <button id="dismissBtn" class="dismiss-btn" type="button">Stop Alarm</button>
-    </div>
+    </section>
 
-    <div class="qr-frame" id="qrFrame">
-      <img id="qrImg" alt="QR Code" />
-      <div class="placeholder" id="placeholder">Waiting for QR image from sender…</div>
-    </div>
+    <!-- Inspection and Extraction Panel -->
+    <section class="inspector-card" id="preservationPanel" style="display: none;">
+      <div class="inspector-header">
+        <div class="mode-pill exact" id="modeBadge">Exact Matrix (100% Identical)</div>
+        <span id="timestampBadge" style="font-size:0.75rem; color:var(--text-dim); font-family:'JetBrains Mono',monospace;">—</span>
+      </div>
 
-    <div class="info-bar">
-      <div class="info-cell">
-        <div class="info-label">Senders</div>
-        <div class="info-value" id="sendersVal">0</div>
+      <div class="property-grid" id="metaGrid">
+        <div class="prop-box">
+          <span class="prop-label">Version</span>
+          <span class="prop-value" id="valVersion">—</span>
+        </div>
+        <div class="prop-box">
+          <span class="prop-label">Error Correction</span>
+          <span class="prop-value" id="valEc">—</span>
+        </div>
+        <div class="prop-box">
+          <span class="prop-label">Mask Pattern</span>
+          <span class="prop-value" id="valMask">—</span>
+        </div>
+        <div class="prop-box">
+          <span class="prop-label">Grid Size</span>
+          <span class="prop-value" id="valGrid">—</span>
+        </div>
       </div>
-      <div class="info-cell">
-        <div class="info-label">Viewers</div>
-        <div class="info-value" id="viewersVal">0</div>
+
+      <div class="verification-row">
+        <span style="color:var(--text-dim); font-weight:500;">Reconstruction Integrity</span>
+        <div class="verification-status" id="valVerification">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Verified Authentic</span>
+        </div>
       </div>
-      <div class="info-cell">
-        <div class="info-label">Last Update</div>
-        <div class="info-value" id="timeVal">—</div>
+
+      <div class="payload-section">
+        <div class="payload-title-bar">
+          <span>Decoded Payload</span>
+          <span id="payloadLenBadge">0 chars</span>
+        </div>
+        <div class="payload-content" id="payloadText"></div>
       </div>
-    </div>
+
+      <div class="action-toolbar">
+        <button id="copyPayloadBtn" class="btn-action" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span id="copyBtnText">Copy Payload</span>
+        </button>
+
+        <button id="downloadPngBtn" class="btn-action" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download PNG
+        </button>
+
+        <button id="downloadSvgBtn" class="btn-action" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download SVG
+        </button>
+      </div>
+    </section>
+
+    <!-- Operational Telemetry Bar -->
+    <footer class="telemetry-bar">
+      <div class="telemetry-item">
+        <span>Senders:</span>
+        <span class="telemetry-val" id="sendersVal">0</span>
+      </div>
+      <div class="telemetry-item">
+        <span>Viewers:</span>
+        <span class="telemetry-val" id="viewersVal">0</span>
+      </div>
+      <div class="telemetry-item">
+        <span>Last Synced:</span>
+        <span class="telemetry-val" id="timeVal">—</span>
+      </div>
+    </footer>
   </div>
 
+  <script src="/static/js/qrcodegen.js"></script>
+  <script src="/static/js/qr-preserver.js"></script>
   <script>
-    /* ========== DOM refs ========== */
-    const dot            = document.getElementById('dot');
-    const connLabel      = document.getElementById('connLabel');
-    const qrFrame        = document.getElementById('qrFrame');
-    const qrImg          = document.getElementById('qrImg');
-    const placeholder    = document.getElementById('placeholder');
-    const sendersVal     = document.getElementById('sendersVal');
-    const viewersVal     = document.getElementById('viewersVal');
-    const timeVal        = document.getElementById('timeVal');
-    const audioToggleBtn = document.getElementById('audioToggleBtn');
-    const audioIcon      = document.getElementById('audioIcon');
-    const audioText      = document.getElementById('audioText');
-    const readyBanner    = document.getElementById('readyBanner');
-    const bannerSub      = document.getElementById('bannerSub');
-    const dismissBtn     = document.getElementById('dismissBtn');
+    /* ========== DOM Elements ========== */
+    const qrCanvas          = document.getElementById('qrCanvas');
+    const qrImg             = document.getElementById('qrImg');
+    const placeholder       = document.getElementById('placeholder');
+    const preservationPanel = document.getElementById('preservationPanel');
+    const modeBadge         = document.getElementById('modeBadge');
+    const valVersion        = document.getElementById('valVersion');
+    const valEc             = document.getElementById('valEc');
+    const valMask           = document.getElementById('valMask');
+    const valGrid           = document.getElementById('valGrid');
+    const valVerification   = document.getElementById('valVerification');
+    const timestampBadge    = document.getElementById('timestampBadge');
+    const payloadText       = document.getElementById('payloadText');
+    const payloadLenBadge   = document.getElementById('payloadLenBadge');
+    const copyPayloadBtn    = document.getElementById('copyPayloadBtn');
+    const copyBtnText       = document.getElementById('copyBtnText');
+    const downloadPngBtn    = document.getElementById('downloadPngBtn');
+    const downloadSvgBtn    = document.getElementById('downloadSvgBtn');
+    const dot               = document.getElementById('dot');
+    const connLabel         = document.getElementById('connLabel');
+    const sendersVal        = document.getElementById('sendersVal');
+    const viewersVal        = document.getElementById('viewersVal');
+    const timeVal           = document.getElementById('timeVal');
+    const audioToggleBtn    = document.getElementById('audioToggleBtn');
+    const audioIconSvg      = document.getElementById('audioIconSvg');
+    const audioLabel        = document.getElementById('audioLabel');
+    const readyBanner       = document.getElementById('readyBanner');
+    const bannerSub         = document.getElementById('bannerSub');
+    const dismissBtn        = document.getElementById('dismissBtn');
 
     /* ========== State ========== */
     const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -370,99 +671,72 @@
     let prevObjectURL = null;
     let titleFlashTimer = null;
     const originalTitle = document.title;
+    let lastRenderedPayload = '';
+    let currentPreserved = null;
 
-    /* ========== Web Audio API Maximum Volume Alarm Engine ========== */
-    class MaxVolumeAlarm {
+    /* ========== Audio Notification Engine ========== */
+    class AudioAlertEngine {
       constructor() {
         this.ctx = null;
-        this.compressor = null;
         this.masterGain = null;
         this.isPlaying = false;
         this.stepTimer = null;
         this.autoStopTimer = null;
+        this.unlocked = false;
       }
 
       init() {
         if (!this.ctx) {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (!AudioContextClass) return false;
-
           this.ctx = new AudioContextClass();
-
-          // Compressor boosts lower frequencies and acts as brickwall loudness maximizer
-          this.compressor = this.ctx.createDynamicsCompressor();
-          this.compressor.threshold.setValueAtTime(-12, this.ctx.currentTime);
-          this.compressor.knee.setValueAtTime(3, this.ctx.currentTime);
-          this.compressor.ratio.setValueAtTime(16, this.ctx.currentTime);
-          this.compressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
-          this.compressor.release.setValueAtTime(0.1, this.ctx.currentTime);
-
-          // Master Gain Node set to 1.0 (Maximum digital 0 dBFS amplitude)
           this.masterGain = this.ctx.createGain();
-          this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
-
-          this.compressor.connect(this.masterGain);
+          this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
           this.masterGain.connect(this.ctx.destination);
         }
 
-        if (this.ctx && this.ctx.state === 'suspended') {
+        if (this.ctx.state === 'suspended') {
           this.ctx.resume().then(() => {
-            updateAudioStatusUI(true);
+            this.unlocked = true;
+            updateAudioUI(true);
           }).catch(() => {
-            updateAudioStatusUI(false);
+            this.unlocked = false;
+            updateAudioUI(false);
           });
-        } else if (this.ctx && this.ctx.state === 'running') {
-          updateAudioStatusUI(true);
+        } else if (this.ctx.state === 'running') {
+          this.unlocked = true;
+          updateAudioUI(true);
         }
 
-        return this.ctx && this.ctx.state === 'running';
+        return this.unlocked;
       }
 
-      playBurst(f1, f2, durationSec = 0.22) {
+      playTone(freq, duration = 0.18, type = 'sine') {
         if (!this.ctx) this.init();
         if (!this.ctx || this.ctx.state !== 'running') return;
 
         const now = this.ctx.currentTime;
-        const toneGain = this.ctx.createGain();
-        toneGain.gain.setValueAtTime(0.9, now);
-        toneGain.gain.setValueAtTime(0.9, now + durationSec - 0.03);
-        toneGain.gain.linearRampToValueAtTime(0.001, now + durationSec);
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
 
-        // Oscillator 1: High harmonics square wave (very piercing and loud)
-        const osc1 = this.ctx.createOscillator();
-        osc1.type = 'square';
-        osc1.frequency.setValueAtTime(f1, now);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
 
-        // Oscillator 2: Sawtooth wave for dense harmonic body
-        const osc2 = this.ctx.createOscillator();
-        osc2.type = 'sawtooth';
-        osc2.frequency.setValueAtTime(f2, now);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-        osc1.connect(toneGain);
-        osc2.connect(toneGain);
-        toneGain.connect(this.compressor);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
 
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + durationSec);
-        osc2.stop(now + durationSec);
+        osc.start(now);
+        osc.stop(now + duration);
       }
 
       playTestChime() {
         this.init();
         if (!this.ctx || this.ctx.state !== 'running') return;
-        const now = this.ctx.currentTime;
-        const g = this.ctx.createGain();
-        g.gain.setValueAtTime(0.6, now);
-        g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-        const osc = this.ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        osc.connect(g);
-        g.connect(this.masterGain);
-        osc.start(now);
-        osc.stop(now + 0.35);
+        this.playTone(880, 0.15);
+        setTimeout(() => this.playTone(1320, 0.25), 120);
       }
 
       start() {
@@ -470,26 +744,21 @@
         if (this.isPlaying) return;
         this.isPlaying = true;
 
-        // Piercing emergency cadence: dual bursts followed by brief pause
-        let step = 0;
-        const tick = () => {
+        let flip = false;
+        const ping = () => {
           if (!this.isPlaying) return;
-          if (step % 3 === 0) {
-            this.playBurst(853, 960, 0.22);
-          } else if (step % 3 === 1) {
-            this.playBurst(960, 1200, 0.22);
-          }
-          step++;
+          this.playTone(flip ? 880 : 1046, 0.16, 'triangle');
+          flip = !flip;
         };
 
-        tick();
-        this.stepTimer = setInterval(tick, 280);
+        ping();
+        this.stepTimer = setInterval(ping, 320);
 
-        // Automatically stop ringing after 20 seconds
         clearTimeout(this.autoStopTimer);
         this.autoStopTimer = setTimeout(() => {
-          stopReadyAlarm();
-        }, 20000);
+          this.stop();
+          stopReadyAlert();
+        }, 15000);
       }
 
       stop() {
@@ -502,104 +771,76 @@
       }
     }
 
-    const alarm = new MaxVolumeAlarm();
+    const alertEngine = new AudioAlertEngine();
 
-    function updateAudioStatusUI(isUnlocked) {
+    function updateAudioUI(isArmed) {
       if (!audioToggleBtn) return;
-      if (isUnlocked) {
-        audioToggleBtn.classList.remove('muted');
-        audioToggleBtn.classList.add('unmuted');
-        if (audioIcon) audioIcon.textContent = '🔊';
-        if (audioText) audioText.textContent = 'Sound Active (Max)';
+      if (isArmed) {
+        audioToggleBtn.classList.add('active');
+        audioLabel.textContent = 'Alert Sound On';
+        audioIconSvg.innerHTML = `
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        `;
       } else {
-        audioToggleBtn.classList.remove('unmuted');
-        audioToggleBtn.classList.add('muted');
-        if (audioIcon) audioIcon.textContent = '🔇';
-        if (audioText) audioText.textContent = 'Click to Enable Sound';
+        audioToggleBtn.classList.remove('active');
+        audioLabel.textContent = 'Alert Sound Off';
+        audioIconSvg.innerHTML = `
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+          <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        `;
       }
     }
 
-    // Auto-unlock audio context on any user interaction with the page
-    ['click', 'touchstart', 'keydown'].forEach((evt) => {
-      document.addEventListener(evt, () => {
-        alarm.init();
-      }, { passive: true });
+    ['click', 'touchstart'].forEach((evt) => {
+      document.addEventListener(evt, () => alertEngine.init(), { once: true, passive: true });
     });
 
-    if (audioToggleBtn) {
-      audioToggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        alarm.init();
-        alarm.playTestChime();
-      });
-    }
+    audioToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      alertEngine.init();
+      alertEngine.playTestChime();
+    });
 
-    /* ========== Ready Alarm Handlers ========== */
-    function triggerReadyAlarm() {
-      // Do NOT ring on the sender's device (e.g. if viewer is open in background on sender phone)
+    /* ========== Ready Notification Trigger ========== */
+    function triggerReadyAlert() {
       try {
         const lastSenderRing = Number(localStorage.getItem('sender_sent_ring') || 0);
-        if (Date.now() - lastSenderRing < 4000) {
-          return;
-        }
+        if (Date.now() - lastSenderRing < 4000) return;
       } catch (_) {}
 
-      alarm.start();
+      alertEngine.start();
 
-      // Mobile device vibration
       if ('vibrate' in navigator) {
-        try { navigator.vibrate([300, 100, 300, 100, 500, 200]); } catch (_) {}
+        try { navigator.vibrate([200, 100, 200, 100, 400]); } catch (_) {}
       }
 
-      // Visual banner & glowing borders
       if (readyBanner) readyBanner.style.display = 'flex';
-      document.body.classList.add('alarm-active');
-      if (qrFrame) qrFrame.classList.add('alarm-border');
 
-      if (!alarm.ctx || alarm.ctx.state !== 'running') {
-        if (bannerSub) bannerSub.textContent = 'Click anywhere to play alarm sound!';
-      } else {
-        if (bannerSub) bannerSub.textContent = 'Ringing at max volume…';
-      }
-
-      // Tab title flashing
       clearInterval(titleFlashTimer);
       let flashState = false;
       titleFlashTimer = setInterval(() => {
         flashState = !flashState;
-        document.title = flashState ? '🚨 SENDER READY!' : '🔔 RINGING!';
-      }, 500);
+        document.title = flashState ? '🔔 SENDER READY' : originalTitle;
+      }, 600);
     }
 
-    function stopReadyAlarm() {
-      alarm.stop();
-      if ('vibrate' in navigator) {
-        try { navigator.vibrate(0); } catch (_) {}
-      }
+    function stopReadyAlert() {
+      alertEngine.stop();
       if (readyBanner) readyBanner.style.display = 'none';
-      document.body.classList.remove('alarm-active');
-      if (qrFrame) qrFrame.classList.remove('alarm-border');
       clearInterval(titleFlashTimer);
       document.title = originalTitle;
     }
 
-    if (dismissBtn) {
-      dismissBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        stopReadyAlarm();
-      });
-    }
+    dismissBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      stopReadyAlert();
+    });
 
-    if (readyBanner) {
-      readyBanner.addEventListener('click', () => {
-        if (alarm.isPlaying && (!alarm.ctx || alarm.ctx.state !== 'running')) {
-          alarm.init();
-          if (bannerSub) bannerSub.textContent = 'Ringing at max volume…';
-        }
-      });
-    }
-
-    /* ========== WebSocket ========== */
+    /* ========== WebSocket Connection ========== */
     let pingTimer = null;
 
     function connectWS() {
@@ -607,8 +848,8 @@
       socket.binaryType = 'blob';
 
       socket.addEventListener('open', () => {
-        dot.classList.add('on');
-        connLabel.textContent = 'Online';
+        dot.classList.add('online');
+        connLabel.textContent = 'Connected';
         socket.send(JSON.stringify({ type: 'role', role: 'viewer' }));
 
         clearInterval(pingTimer);
@@ -620,32 +861,29 @@
       });
 
       socket.addEventListener('message', (ev) => {
-        // Binary blob — QR image
         if (ev.data instanceof Blob) {
-          displayImage(ev.data);
+          displayLegacyImage(ev.data);
           return;
         }
-        // Text — JSON status or ring event
         try {
           const msg = JSON.parse(ev.data);
-          if (msg && msg.type === 'status') {
+          if (msg && msg.type === 'qr_preserved') {
+            displayPreservedQr(msg.qr);
+          } else if (msg && msg.type === 'status') {
             sendersVal.textContent = msg.senders;
             viewersVal.textContent = msg.viewers;
           } else if (msg && msg.type === 'ring') {
-            if (msg.action === 'start') {
-              triggerReadyAlarm();
-            } else if (msg.action === 'stop') {
-              stopReadyAlarm();
-            }
+            if (msg.action === 'start') triggerReadyAlert();
+            else if (msg.action === 'stop') stopReadyAlert();
           }
         } catch (_) {}
       });
 
       socket.addEventListener('close', () => {
         clearInterval(pingTimer);
-        dot.classList.remove('on');
-        connLabel.textContent = 'Offline';
-        stopReadyAlarm();
+        dot.classList.remove('online');
+        connLabel.textContent = 'Disconnected';
+        stopReadyAlert();
         setTimeout(connectWS, 1500);
       });
 
@@ -654,32 +892,129 @@
       });
     }
 
-    /* ========== Image Display ========== */
-    function displayImage(blob) {
-      // Revoke previous URL to prevent memory leak
-      if (prevObjectURL) {
-        URL.revokeObjectURL(prevObjectURL);
+    /* ========== Exact QR Matrix Renderer ========== */
+    function displayPreservedQr(qrData) {
+      if (!qrData) return;
+      const preserved = QrPreserver.PreservedQr.fromJSON(qrData);
+      if (!preserved || !preserved.moduleMatrix) return;
+
+      currentPreserved = preserved;
+
+      // Render exact module matrix cleanly on canvas
+      QrPreserver.ExactQrRenderer.renderToCanvas(preserved.moduleMatrix, qrCanvas, {
+        quietZone: 4,
+        targetSize: 360,
+      });
+
+      qrCanvas.classList.add('visible');
+      qrImg.style.display = 'none';
+      placeholder.style.display = 'none';
+
+      // Timestamp
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      timeVal.textContent = timeStr;
+      timestampBadge.textContent = timeStr;
+
+      // Mode Badge
+      preservationPanel.style.display = 'flex';
+      if (preserved.mode === 'EXACT') {
+        modeBadge.className = 'mode-pill exact';
+        modeBadge.textContent = 'Mode 1 — Exact (100% Identical Matrix)';
+      } else if (preserved.mode === 'STRUCTURAL') {
+        modeBadge.className = 'mode-pill structural';
+        modeBadge.textContent = 'Mode 2 — Structural (Fixed Metadata)';
+      } else {
+        modeBadge.className = 'mode-pill payload';
+        modeBadge.textContent = 'Mode 3 — Payload (Fallback Generated)';
       }
+
+      // Metadata Inspector
+      valVersion.textContent = preserved.version ? `V${preserved.version}` : '—';
+      valEc.textContent = preserved.errorCorrection || '—';
+      valMask.textContent = preserved.maskPattern !== null ? `M${preserved.maskPattern}` : '—';
+      valGrid.textContent = preserved.matrixSize ? `${preserved.matrixSize}×${preserved.matrixSize}` : '—';
+
+      // Integrity Status
+      if (preserved.isVerified) {
+        if (preserved.usedCanonical && preserved.mismatchCount > 0) {
+          valVerification.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Verified (${preserved.mismatchCount} cam-noise bits filtered)</span>
+          `;
+        } else {
+          valVerification.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>100% Verified Identical</span>
+          `;
+        }
+      } else {
+        valVerification.innerHTML = `<span style="color:var(--amber);">${preserved.mismatchCount >= 0 ? `${preserved.mismatchCount} mismatches` : 'Unverified'}</span>`;
+      }
+
+      // Payload
+      lastRenderedPayload = preserved.payload || '';
+      payloadText.textContent = lastRenderedPayload || '(Binary or unparsed payload)';
+      payloadLenBadge.textContent = `${lastRenderedPayload.length} chars`;
+    }
+
+    /* ========== Export Controls ========== */
+    copyPayloadBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!lastRenderedPayload) return;
+      try {
+        await navigator.clipboard.writeText(lastRenderedPayload);
+        copyBtnText.textContent = 'Copied to Clipboard';
+        setTimeout(() => { copyBtnText.textContent = 'Copy Payload'; }, 1500);
+      } catch (_) {}
+    });
+
+    downloadPngBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!qrCanvas || !currentPreserved) return;
+      const a = document.createElement('a');
+      const slug = (currentPreserved.payload || 'qr').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
+      a.download = `qr_${slug}.png`;
+      a.href = qrCanvas.toDataURL('image/png');
+      a.click();
+    });
+
+    downloadSvgBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!currentPreserved || !currentPreserved.moduleMatrix) return;
+      const svgStr = QrPreserver.ExactQrRenderer.renderToSvg(currentPreserved.moduleMatrix, { quietZone: 4 });
+      const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const slug = (currentPreserved.payload || 'qr').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
+      a.download = `qr_${slug}.svg`;
+      a.href = url;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    /* ========== Legacy Image Fallback ========== */
+    function displayLegacyImage(blob) {
+      if (prevObjectURL) URL.revokeObjectURL(prevObjectURL);
       const url = URL.createObjectURL(blob);
       prevObjectURL = url;
 
       qrImg.src = url;
-      qrImg.classList.add('visible');
-      placeholder.classList.add('hidden');
+      qrImg.style.display = 'block';
+      qrCanvas.classList.remove('visible');
+      placeholder.style.display = 'none';
+      preservationPanel.style.display = 'none';
 
-      // Flash animation
-      qrFrame.classList.remove('flash');
-      void qrFrame.offsetWidth; // force reflow to restart animation
-      qrFrame.classList.add('flash');
-
-      // Timestamp
       const now = new Date();
       timeVal.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
-    /* ========== Init ========== */
+    /* ========== Initialize ========== */
     connectWS();
   </script>
 </body>
 </html>
-

@@ -6,12 +6,14 @@ from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.ws_manager import manager
 
 app = FastAPI(title="QR Image Relay")
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 NO_CACHE_HEADERS = {
@@ -36,7 +38,7 @@ async def add_cache_prevention_headers(request, call_next):
 
 @app.api_route("/", methods=["GET", "HEAD"])
 async def root():
-    return RedirectResponse(url="/viewer.html", headers=NO_CACHE_HEADERS)
+    return FileResponse(STATIC_DIR / "viewer.html", media_type="text/html", headers=NO_CACHE_HEADERS)
 
 
 @app.api_route("/sender.html", methods=["GET", "HEAD"])
@@ -95,6 +97,8 @@ async def websocket_endpoint(websocket: WebSocket):
                                 await manager.set_role(websocket, role)
                         elif msg_type == "ping":
                             await websocket.send_text('{"type":"pong"}')
+                        elif msg_type == "qr_preserved":
+                            await manager.broadcast_qr(text)
                         elif msg_type in ("ring", "ready"):
                             action = data.get("action", "start")
                             await manager.broadcast_to_viewers(
@@ -114,6 +118,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
-    except Exception:
-        logging.exception("Unexpected error in WebSocket handler")
-        await manager.disconnect(websocket)
+    except Exception as e:
+        if "disconnect" in type(e).__name__.lower() or "disconnect" in str(e).lower():
+            await manager.disconnect(websocket)
+        else:
+            logging.exception("Unexpected error in WebSocket handler")
+            await manager.disconnect(websocket)

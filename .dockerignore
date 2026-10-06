@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+certs
+image_test
+image_result
+scripts
+tests
+.DS_Store

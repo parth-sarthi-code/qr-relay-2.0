@@ -1,5 +1,10 @@
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .venv/
 .env
+.env.*
 .DS_Store
+certs/
+image_result/

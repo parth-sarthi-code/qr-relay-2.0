@@ -22,6 +22,10 @@ class WebSocketManager:
         self._latest_frame: Optional[bytes] = None
         self._latest_frame_time: float = 0.0
 
+        # Cached latest preserved QR symbol — sent to new viewers on connect
+        self._latest_qr: Optional[str] = None
+        self._latest_qr_time: float = 0.0
+
         # Debounce status broadcasts: coalesce rapid connect/disconnect bursts
         self._status_dirty = False
         self._status_task: Optional[asyncio.Task] = None
@@ -54,9 +58,12 @@ class WebSocketManager:
             if websocket in self._connections:
                 self._connections[websocket] = role
 
-        # If a viewer just announced, send them the cached frame immediately
-        if role == "viewer" and self._latest_frame is not None:
-            asyncio.create_task(self._safe_send_bytes(websocket, self._latest_frame))
+        # If a viewer just announced, send them the cached QR or frame immediately
+        if role == "viewer":
+            if self._latest_qr is not None:
+                asyncio.create_task(self._safe_send_text(websocket, self._latest_qr))
+            elif self._latest_frame is not None:
+                asyncio.create_task(self._safe_send_bytes(websocket, self._latest_frame))
 
         await self._broadcast_status()
 
@@ -79,6 +86,18 @@ class WebSocketManager:
         # Fire-and-forget concurrent sends — never block the sender's upload loop
         for ws in viewers:
             asyncio.create_task(self._safe_send_bytes(ws, data))
+
+    async def broadcast_qr(self, text: str) -> None:
+        """Cache the preserved QR symbol and fan-out to all viewers concurrently."""
+        async with self._lock:
+            self._latest_qr = text
+            self._latest_qr_time = time.monotonic()
+            viewers = [
+                ws for ws, role in self._connections.items() if role == "viewer"
+            ]
+
+        for ws in viewers:
+            asyncio.create_task(self._safe_send_text(ws, text))
 
     async def broadcast_to_viewers(self, text: str) -> None:
         """Send a text message to all active viewers."""

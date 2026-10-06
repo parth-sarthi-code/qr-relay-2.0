@@ -1,43 +1,65 @@
-# QR Relay — Railway Deployment Package
+# QR Relay 2.0 — Exact QR Preservation & Relay
 
-This directory contains the production-ready package for deploying **QR Relay** to [Railway](https://railway.app).
-
-## Key Deployment Features Included
-- **Dockerfile**: Lightweight `python:3.11-slim` container with proxy header support.
-- **Dynamic Port**: Binds to `${PORT:-8000}` automatically as required by Railway.
-- **Automatic HTTPS / WSS**: Railway edge terminates SSL, so mobile cameras work securely out of the box with zero certificate warnings.
-- **WebSocket Fan-out**: Real-time binary camera crop relay with low latency.
+High-performance, zero-image-streaming QR relay service. Instead of transmitting lossy camera images over the wire, **QR Relay 2.0** extracts and preserves the original QR symbol's mathematical and topological characteristics locally on the device, deterministically regenerating the **exact original QR symbol** on remote viewers.
 
 ---
 
-## Deployment Option 1: Via GitHub (Recommended)
+## ⚡ Core Features
 
-1. Initialize a git repository and push to GitHub:
-   ```bash
-   cd ~/qr-relay-railway
-   git init
-   git add .
-   git commit -m "Initial Railway deployment package"
-   # Create a repo on GitHub, then link and push:
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-   git push -u origin main
-   ```
-2. Go to [railway.app](https://railway.app) and sign in.
-3. Click **New Project** → **Deploy from GitHub repo** → select the repository.
-4. Once deployed, click **Settings** → **Networking** → **Generate Domain**.
-5. Your service is live at `https://<your-domain>.up.railway.app`:
-   - Sender: `https://<your-domain>.up.railway.app/sender.html`
-   - Viewer: `https://<your-domain>.up.railway.app/`
+- **Exact QR Preservation (Goal B)**: Preserves module matrix, version (1–40), error correction level (L, M, Q, H), mask pattern (0–7), ECI, and encoding segments.
+- **Reed-Solomon Canonical Auto-Repair**: Corrects camera sampling noise and glare, achieving 100% verified identical symbols.
+- **Zero Camera Image Transmission**: Camera frames stay strictly in local memory and are never uploaded. Only a compact bitstring (< 100 bytes) is relayed over WebSockets.
+- **Professional Minimalist Interface**: Built for utility and speed (property inspector, SVG/PNG export, copyable payload).
+- **Audio Attention Signal**: Sender-to-viewer operator attention signal with local chime.
+- **Production & Railway Ready**: Pre-configured `Dockerfile`, `.dockerignore`, `railway.json`, and automatic cloud environment detection.
 
 ---
 
-## Deployment Option 2: Via Railway CLI
+## 🚀 Quick Deployment to Railway
 
-If you have the Railway CLI installed:
+### Option 1: Via GitHub (Recommended)
+1. Push this repository to GitHub.
+2. Go to [railway.com](https://railway.com) and click **New Project** → **Deploy from GitHub repo**.
+3. Select this repository (`qr-relay-2.0`).
+4. In **Settings** → **Networking**, click **Generate Domain**.
+5. Your service is live with automatic HTTPS / WSS:
+   - **Viewer**: `https://<your-domain>.up.railway.app/`
+   - **Scanner**: `https://<your-domain>.up.railway.app/sender.html`
+   - **Healthcheck**: `https://<your-domain>.up.railway.app/status`
+
+### Option 2: Via Railway CLI
 ```bash
-cd ~/qr-relay-railway
 railway login
 railway init
 railway up
+railway domain
+```
+
+---
+
+## 💻 Local Development
+
+Run with auto-provisioned SSL (enables mobile camera access on local LAN):
+
+```bash
+# Setup virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Start runner
+python run.py
+```
+
+- **Local Viewer**: `https://localhost:8000/`
+- **Network Scanner**: `https://<LAN-IP>:8000/sender.html`
+
+---
+
+## 🧪 Testing
+
+Run the automated preservation test suite (165 assertions covering all QR versions, EC levels, masks, and segments):
+
+```bash
+deno run -A tests/test_qr_preservation.js
 ```
