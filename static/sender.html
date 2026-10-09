@@ -40,18 +40,20 @@
       color: var(--text-main);
       height: 100dvh;
       overflow: hidden;
+      overscroll-behavior: none;
       -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
 
     .app-layout {
-      max-width: 480px;
+      max-width: 440px;
       height: 100dvh;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      padding: 12px 14px max(14px, env(safe-area-inset-bottom));
-      gap: 12px;
+      padding: 10px 14px max(12px, env(safe-area-inset-bottom));
+      gap: 10px;
       box-sizing: border-box;
       overflow: hidden;
     }
@@ -156,10 +158,20 @@
     }
 
     /* ---- Camera Viewfinder Stage ---- */
-    .viewfinder-card {
+    .viewfinder-wrapper {
       flex: 1;
       min-height: 0;
       width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 2px 0;
+    }
+
+    .viewfinder-card {
+      width: min(85%, calc(52dvh * 0.75), 360px);
+      aspect-ratio: 3 / 4;
       background: #000;
       border: 1px solid var(--border-medium);
       border-radius: var(--radius-lg);
@@ -169,12 +181,103 @@
       align-items: center;
       justify-content: center;
       touch-action: none;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
     }
     .viewfinder-card video {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+      transition: transform 0.15s ease-out;
+    }
+
+    /* Reticle Corner Guides */
+    .viewfinder-reticle {
+      position: absolute;
+      inset: 14px;
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0.35;
+      transition: opacity 0.25s ease, border-color 0.25s ease;
+    }
+    .viewfinder-card.has-qr .viewfinder-reticle {
+      opacity: 0.9;
+    }
+    .reticle-corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-color: rgba(255, 255, 255, 0.85);
+      border-style: solid;
+      border-width: 0;
+      transition: border-color 0.2s;
+    }
+    .reticle-tl { top: 0; left: 0; border-top-width: 2.5px; border-left-width: 2.5px; border-top-left-radius: 6px; }
+    .reticle-tr { top: 0; right: 0; border-top-width: 2.5px; border-right-width: 2.5px; border-top-right-radius: 6px; }
+    .reticle-bl { bottom: 0; left: 0; border-bottom-width: 2.5px; border-left-width: 2.5px; border-bottom-left-radius: 6px; }
+    .reticle-br { bottom: 0; right: 0; border-bottom-width: 2.5px; border-right-width: 2.5px; border-bottom-right-radius: 6px; }
+    .viewfinder-card.has-qr .reticle-corner {
+      border-color: var(--emerald);
+    }
+
+    /* Floating Lens Zoom Dock inside Viewfinder */
+    .lens-dock {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(10, 12, 18, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 4px 6px;
+      border-radius: 9999px;
+      z-index: 10;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .lens-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', 'Inter', -apple-system, sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 0;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lens-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .lens-btn:active {
+      transform: scale(0.9);
+    }
+
+    .lens-btn.active {
+      background: rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+      transform: scale(1.08);
+      border-color: rgba(255, 255, 255, 0.38);
     }
 
     /* Detection Bounding Box */
@@ -380,13 +483,26 @@
     </header>
 
     <!-- Camera Viewfinder -->
-    <div class="viewfinder-card" id="cameraWrap">
-      <div class="viewfinder-status" id="statusVal">
-        Initializing camera...
-      </div>
+    <div class="viewfinder-wrapper">
+      <div class="viewfinder-card" id="cameraWrap">
+        <div class="viewfinder-status" id="statusVal">
+          Initializing camera...
+        </div>
 
-      <video id="video" autoplay playsinline muted></video>
-      <div id="scanOverlay" class="qr-bounding-box"></div>
+        <video id="video" autoplay playsinline muted></video>
+        <div id="scanOverlay" class="qr-bounding-box"></div>
+
+        <!-- Viewfinder Reticle Corner Guides -->
+        <div class="viewfinder-reticle" aria-hidden="true">
+          <span class="reticle-corner reticle-tl"></span>
+          <span class="reticle-corner reticle-tr"></span>
+          <span class="reticle-corner reticle-bl"></span>
+          <span class="reticle-corner reticle-br"></span>
+        </div>
+
+        <!-- Floating Lens Zoom Dock -->
+        <div class="lens-dock" id="lensDock"></div>
+      </div>
     </div>
 
     <!-- Controls Console -->
@@ -454,6 +570,7 @@
     const readyBtn     = document.getElementById('readyBtn');
     const signalIcon   = document.getElementById('signalIcon');
     const signalText   = document.getElementById('signalText');
+    const lensDock     = document.getElementById('lensDock');
 
     /* ========== State ========== */
     const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -467,6 +584,9 @@
     let lastScanTime = 0;
     let viewerCount = 0;
     let torchOn = false;
+    let cachedVideoDevices = [];
+    let currentLensPresets = [];
+    let activeLensIndex    = -1;
 
     // Offscreen detection, ROI crop, and downscaled export canvases
     const detectCanvas = document.createElement('canvas');
@@ -668,20 +788,22 @@
     async function populateCameras() {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter((d) => d.kind === 'videoinput');
+        cachedVideoDevices = devices.filter((d) => d.kind === 'videoinput');
 
         camSelect.innerHTML = '';
-        videoDevices.forEach((dev, idx) => {
+        cachedVideoDevices.forEach((dev, idx) => {
           const opt = document.createElement('option');
           opt.value = dev.deviceId;
           opt.textContent = dev.label || `Camera ${idx + 1}`;
           camSelect.appendChild(opt);
         });
 
-        if (videoTrack) {
+        if (videoTrack && videoTrack.getSettings) {
           const curId = videoTrack.getSettings().deviceId;
           if (curId) camSelect.value = curId;
         }
+
+        setupLensDock();
       } catch (_) {}
     }
 
@@ -707,7 +829,7 @@
       }
     }
 
-    /* ========== Zoom Controls ========== */
+    /* ========== Zoom & Lens Controls ========== */
     function setupZoom() {
       if (!videoTrack) return;
       const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
@@ -716,33 +838,49 @@
         zoomSlider.min = caps.zoom.min;
         zoomSlider.max = caps.zoom.max;
         zoomSlider.step = caps.zoom.step || 0.1;
-        const curZoom = videoTrack.getSettings().zoom || caps.zoom.min;
+        const curZoom = (videoTrack.getSettings ? videoTrack.getSettings().zoom : null) || caps.zoom.min;
         zoomSlider.value = curZoom;
         zoomVal.textContent = `${Number(curZoom).toFixed(1)}×`;
         zoomSlider.disabled = false;
-
         zoomSlider.oninput = () => applyZoom(parseFloat(zoomSlider.value));
       } else {
-        zoomSlider.disabled = true;
+        zoomSlider.min = 0.6;
+        zoomSlider.max = 3.0;
+        zoomSlider.step = 0.1;
+        zoomSlider.value = 1.0;
+        zoomSlider.disabled = false;
         zoomVal.textContent = '1.0×';
+        zoomSlider.oninput = () => applyZoom(parseFloat(zoomSlider.value));
       }
 
       setupPinchToZoom(caps);
+      setupLensDock();
     }
 
     function applyZoom(val) {
-      if (!videoTrack || !videoTrack.applyConstraints) return;
-      const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
-      if (!caps.zoom) return;
+      const caps = (videoTrack && videoTrack.getCapabilities) ? videoTrack.getCapabilities() : {};
 
-      const clamped = Math.max(caps.zoom.min, Math.min(caps.zoom.max, val));
-      videoTrack.applyConstraints({ advanced: [{ zoom: clamped }] }).catch(() => {});
-      zoomSlider.value = clamped;
-      zoomVal.textContent = `${clamped.toFixed(1)}×`;
+      if (caps.zoom) {
+        const clamped = Math.max(caps.zoom.min, Math.min(caps.zoom.max, val));
+        videoTrack.applyConstraints({ advanced: [{ zoom: clamped }] }).catch(() => {});
+        video.style.transform = '';
+        zoomSlider.value = clamped;
+        zoomVal.textContent = `${clamped.toFixed(1)}×`;
+        highlightActiveLens(clamped);
+      } else {
+        const clamped = Math.max(0.6, Math.min(4.0, val));
+        if (clamped === 1.0) {
+          video.style.transform = '';
+        } else {
+          video.style.transform = `scale(${clamped})`;
+        }
+        zoomSlider.value = clamped;
+        zoomVal.textContent = `${clamped.toFixed(1)}×`;
+        highlightActiveLens(clamped);
+      }
     }
 
     function setupPinchToZoom(caps) {
-      if (!caps.zoom) return;
       let pinchStartDist = 0;
       let pinchStartZoom = 1;
 
@@ -757,7 +895,7 @@
       }, { passive: true });
 
       cameraWrap.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && pinchStartDist > 0 && !zoomSlider.disabled) {
+        if (e.touches.length === 2 && pinchStartDist > 0) {
           const dist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
@@ -769,6 +907,157 @@
       cameraWrap.addEventListener('touchend', (e) => {
         if (e.touches.length < 2) pinchStartDist = 0;
       }, { passive: true });
+    }
+
+    /* ========== Lens Zoom Dock Engine ========== */
+    function setupLensDock() {
+      if (!lensDock) return;
+      const caps = (videoTrack && videoTrack.getCapabilities) ? videoTrack.getCapabilities() : {};
+      const settings = (videoTrack && videoTrack.getSettings) ? videoTrack.getSettings() : {};
+      const curZoom = settings.zoom || parseFloat(zoomSlider.value) || 1.0;
+
+      currentLensPresets = buildLensPresets(caps, cachedVideoDevices);
+
+      lensDock.innerHTML = '';
+      if (!currentLensPresets || currentLensPresets.length === 0) {
+        lensDock.style.display = 'none';
+        return;
+      }
+      lensDock.style.display = 'inline-flex';
+
+      currentLensPresets.forEach((preset, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lens-btn';
+        btn.textContent = preset.label;
+        btn.title = `Switch to ${preset.label} zoom`;
+        btn.dataset.index = String(idx);
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setLensPreset(preset, idx);
+        });
+
+        lensDock.appendChild(btn);
+      });
+
+      highlightActiveLens(curZoom);
+    }
+
+    function buildLensPresets(caps, devices) {
+      const presets = [];
+      const hasZoomCap = Boolean(caps && caps.zoom);
+      const minZ = hasZoomCap ? caps.zoom.min : 1.0;
+      const maxZ = hasZoomCap ? caps.zoom.max : 1.0;
+
+      // 1. Ultra-wide preset (< 1.0x)
+      let ultraWideDevice = (devices || []).find(d => /ultra|0\.[56]|wide-angle|wideangle/i.test(d.label));
+      if (hasZoomCap && minZ <= 0.85) {
+        const val = minZ <= 0.55 ? 0.5 : 0.6;
+        presets.push({
+          label: val === 0.5 ? '0.5×' : '0.6×',
+          zoom: val,
+          type: 'hw'
+        });
+      } else if (ultraWideDevice) {
+        presets.push({
+          label: '0.6×',
+          zoom: 0.6,
+          deviceId: ultraWideDevice.deviceId,
+          type: 'device'
+        });
+      } else {
+        // Universal 0.6x preset (hardware clamped or simulated fallback)
+        presets.push({
+          label: '0.6×',
+          zoom: 0.6,
+          type: (hasZoomCap && minZ <= 0.6) ? 'hw' : 'simulated'
+        });
+      }
+
+      // 2. Standard 1.0x Wide preset
+      presets.push({
+        label: '1×',
+        zoom: 1.0,
+        type: 'hw'
+      });
+
+      // 3. Telephoto / Zoom presets (2x, 3x)
+      let teleDevice = (devices || []).find(d => /tele|3x|2x/i.test(d.label));
+      if (hasZoomCap) {
+        if (maxZ >= 2.8) {
+          if (maxZ >= 4.5) {
+            presets.push({ label: '2×', zoom: 2.0, type: 'hw' });
+            presets.push({ label: '3×', zoom: 3.0, type: 'hw' });
+          } else {
+            presets.push({ label: '3×', zoom: Math.min(3.0, maxZ), type: 'hw' });
+          }
+        } else if (maxZ >= 1.8) {
+          presets.push({ label: '2×', zoom: 2.0, type: 'hw' });
+        } else {
+          presets.push({ label: '3×', zoom: 3.0, type: 'simulated' });
+        }
+      } else if (teleDevice) {
+        presets.push({
+          label: '3×',
+          zoom: 3.0,
+          deviceId: teleDevice.deviceId,
+          type: 'device'
+        });
+      } else {
+        presets.push({
+          label: '3×',
+          zoom: 3.0,
+          type: 'simulated'
+        });
+      }
+
+      return presets;
+    }
+
+    function setLensPreset(preset, idx) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(12); } catch (_) {}
+      }
+
+      if (preset.type === 'device' && preset.deviceId) {
+        startCamera(preset.deviceId);
+        highlightActivePresetIndex(idx);
+        return;
+      }
+
+      applyZoom(preset.zoom);
+      highlightActivePresetIndex(idx);
+    }
+
+    function highlightActivePresetIndex(idx) {
+      activeLensIndex = idx;
+      if (!lensDock) return;
+      const btns = lensDock.querySelectorAll('.lens-btn');
+      btns.forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+    }
+
+    function highlightActiveLens(currentZoomVal) {
+      if (!currentLensPresets || !currentLensPresets.length) return;
+      const z = Number(currentZoomVal) || 1.0;
+      let closestIdx = -1;
+      let minDiff = Infinity;
+
+      currentLensPresets.forEach((p, i) => {
+        const diff = Math.abs(p.zoom - z);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      });
+
+      if (minDiff <= 0.4) {
+        highlightActivePresetIndex(closestIdx);
+      } else {
+        highlightActivePresetIndex(-1);
+      }
     }
 
     /* ========== Detection & Exact Preservation Loop ========== */
@@ -857,6 +1146,7 @@
       // No QR in frame
       if (!qrText || !bbox) {
         overlay.style.display = 'none';
+        cameraWrap.classList.remove('has-qr');
         if (now - lastSeenQrTime > 2000) {
           lastQRText = null;
           statusVal.className = 'viewfinder-status';
@@ -865,6 +1155,7 @@
         return;
       }
       lastSeenQrTime = now;
+      cameraWrap.classList.add('has-qr');
 
       // Update overlay box
       showOverlay(bbox, scale);
