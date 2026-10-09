@@ -13,38 +13,69 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --vscode-bg: #1e1e1e;
-      --vscode-sideBar: #252526;
-      --vscode-card: #252526;
-      --vscode-card-hover: #2a2d2e;
-      --vscode-input-bg: #3c3c3c;
-      --vscode-input-border: #3c3c3c;
-      --vscode-focus-border: #007acc;
-      --vscode-button-bg: #0e639c;
-      --vscode-button-hover: #1177bb;
-      --vscode-button-active: #094771;
-      --vscode-text: #cccccc;
-      --vscode-text-bright: #ffffff;
-      --vscode-text-muted: #858585;
-      --vscode-border: #2d2d2d;
-      --vscode-border-light: #3e3e42;
-      --vscode-success: #89d185;
-      --vscode-error: #f48771;
-      --vscode-font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
-      --vscode-font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    :root, [data-theme="dark"] {
+      --theme-bg: #282828;
+      --theme-bg-dim: #202020;
+      --theme-card: #32302f;
+      --theme-card-hover: #3c3836;
+      --theme-input-bg: #3c3836;
+      --theme-input-border: #504945;
+      --theme-border: #3c3836;
+      --theme-border-light: #504945;
+      --theme-text: #d4be98;
+      --theme-text-bright: #ebdbb2;
+      --theme-text-muted: #928374;
+      --theme-accent: #7daea3;
+      --theme-accent-hover: #89b482;
+      --theme-button-bg: #45707a;
+      --theme-button-hover: #5a858f;
+      --theme-button-active: #3a5e66;
+      --theme-button-fg: #ebdbb2;
+      --theme-success: #a9b665;
+      --theme-success-bg: rgba(169, 182, 101, 0.16);
+      --theme-error: #ea6962;
+      --theme-orange: #e78a4e;
+      --theme-yellow: #d8a657;
+      --theme-font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+      --theme-font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    [data-theme="light"] {
+      --theme-bg: #fbf1c7;
+      --theme-bg-dim: #efe4c9;
+      --theme-card: #f2e5bc;
+      --theme-card-hover: #ebdbb2;
+      --theme-input-bg: #ebdbb2;
+      --theme-input-border: #d5c4a1;
+      --theme-border: #d5c4a1;
+      --theme-border-light: #bdae93;
+      --theme-text: #3c3836;
+      --theme-text-bright: #282828;
+      --theme-text-muted: #7c6f64;
+      --theme-accent: #45707a;
+      --theme-accent-hover: #5a858f;
+      --theme-button-bg: #45707a;
+      --theme-button-hover: #395c64;
+      --theme-button-active: #2f4c52;
+      --theme-button-fg: #fbf1c7;
+      --theme-success: #6c782e;
+      --theme-success-bg: rgba(108, 120, 46, 0.16);
+      --theme-error: #c14a4a;
+      --theme-orange: #c35e0a;
+      --theme-yellow: #b47109;
     }
 
     body {
-      font-family: var(--vscode-font-ui);
-      background: var(--vscode-bg);
-      color: var(--vscode-text);
+      font-family: var(--theme-font-ui);
+      background: var(--theme-bg);
+      color: var(--theme-text);
       height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
       -webkit-font-smoothing: antialiased;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+      transition: background 0.15s ease, color 0.15s ease;
     }
 
     .app-layout {
@@ -55,20 +86,22 @@
       flex-direction: column;
       box-sizing: border-box;
       overflow: hidden;
-      background: var(--vscode-bg);
+      background: var(--theme-bg);
+      transition: background 0.15s ease;
     }
 
     /* ---- Top Bar / Header ---- */
     .nav-bar {
       width: 100%;
       height: 38px;
-      padding: 0 12px;
+      padding: 0 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
-      background: var(--vscode-sideBar);
-      border-bottom: 1px solid var(--vscode-border);
+      background: var(--theme-card);
+      border-bottom: 1px solid var(--theme-border);
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
 
     .brand-group {
@@ -80,17 +113,17 @@
       width: 22px;
       height: 22px;
       border-radius: 3px;
-      background: #1e1e1e;
-      border: 1px solid var(--vscode-border-light);
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border-light);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--vscode-focus-border);
+      color: var(--theme-accent);
     }
     .brand-name {
       font-size: 0.86rem;
       font-weight: 600;
-      color: var(--vscode-text-bright);
+      color: var(--theme-text-bright);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -102,9 +135,9 @@
       letter-spacing: 0.04em;
       padding: 1px 5px;
       border-radius: 3px;
-      background: #1e1e1e;
-      border: 1px solid var(--vscode-border);
-      color: var(--vscode-text-muted);
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border);
+      color: var(--theme-text-muted);
     }
 
     .nav-actions {
@@ -115,51 +148,72 @@
     .btn-secondary {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      background: var(--vscode-bg);
-      border: 1px solid var(--vscode-border);
+      gap: 4px;
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border);
       border-radius: 3px;
-      color: var(--vscode-text);
-      font-size: 0.74rem;
+      color: var(--theme-text);
+      font-size: 0.72rem;
       font-weight: 500;
       font-family: inherit;
-      padding: 4px 8px;
+      padding: 4px 7px;
       cursor: pointer;
       text-decoration: none;
       transition: background 0.12s, border-color 0.12s, color 0.12s;
       white-space: nowrap;
     }
     .btn-secondary:hover {
-      background: var(--vscode-card-hover);
-      border-color: var(--vscode-border-light);
-      color: var(--vscode-text-bright);
+      background: var(--theme-card-hover);
+      border-color: var(--theme-border-light);
+      color: var(--theme-text-bright);
+    }
+
+    .btn-theme {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border);
+      border-radius: 3px;
+      color: var(--theme-text);
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      flex-shrink: 0;
+    }
+    .btn-theme:hover {
+      background: var(--theme-card-hover);
+      border-color: var(--theme-border-light);
+      color: var(--theme-text-bright);
     }
 
     .telemetry-chip {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: var(--vscode-bg);
-      border: 1px solid var(--vscode-border);
+      gap: 5px;
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border);
       border-radius: 3px;
-      padding: 4px 8px;
-      font-size: 0.7rem;
+      padding: 4px 7px;
+      font-size: 0.68rem;
       font-weight: 600;
-      font-family: var(--vscode-font-mono);
-      color: var(--vscode-text-muted);
+      font-family: var(--theme-font-mono);
+      color: var(--theme-text-muted);
     }
     .status-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--vscode-error);
+      background: var(--theme-error);
       transition: background 0.3s;
     }
     .status-dot.online {
-      background: var(--vscode-success);
+      background: var(--theme-success);
     }
 
-    /* ---- Camera Viewfinder Stage (Touches Edges Horizontally, 4:3 Ratio) ---- */
+    /* ---- Camera Viewfinder Stage (Touches Edges Horizontally, 3:4 Ratio) ---- */
     .viewfinder-wrapper {
       width: 100%;
       display: flex;
@@ -172,9 +226,10 @@
 
     .viewfinder-card {
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 3 / 4;
+      max-height: calc(100dvh - 185px);
       background: #000;
-      border-bottom: 1px solid var(--vscode-border);
+      border-bottom: 1px solid var(--theme-border);
       position: relative;
       overflow: hidden;
       display: flex;
@@ -196,17 +251,17 @@
       inset: 12px;
       pointer-events: none;
       z-index: 4;
-      opacity: 0.35;
+      opacity: 0.4;
       transition: opacity 0.2s ease;
     }
     .viewfinder-card.has-qr .viewfinder-reticle {
-      opacity: 0.9;
+      opacity: 0.95;
     }
     .reticle-corner {
       position: absolute;
-      width: 16px;
-      height: 16px;
-      border-color: rgba(255, 255, 255, 0.8);
+      width: 18px;
+      height: 18px;
+      border-color: rgba(235, 219, 178, 0.8);
       border-style: solid;
       border-width: 0;
       transition: border-color 0.15s;
@@ -216,14 +271,14 @@
     .reticle-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
     .reticle-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
     .viewfinder-card.has-qr .reticle-corner {
-      border-color: var(--vscode-success);
+      border-color: var(--theme-success);
     }
 
     /* Detection Bounding Box */
     .qr-bounding-box {
       position: absolute;
-      border: 2px solid var(--vscode-success);
-      background: rgba(137, 209, 133, 0.12);
+      border: 2px solid var(--theme-success);
+      background: var(--theme-success-bg);
       border-radius: 2px;
       display: none;
       pointer-events: none;
@@ -237,47 +292,49 @@
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(30, 30, 30, 0.88);
-      border: 1px solid var(--vscode-border-light);
-      color: var(--vscode-text);
+      background: var(--theme-card);
+      border: 1px solid var(--theme-border-light);
+      color: var(--theme-text);
       padding: 4px 10px;
       border-radius: 3px;
       font-size: 0.72rem;
       font-weight: 500;
-      font-family: var(--vscode-font-mono);
+      font-family: var(--theme-font-mono);
       pointer-events: none;
       white-space: nowrap;
       z-index: 6;
       display: flex;
       align-items: center;
       gap: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     }
     .viewfinder-status.detected {
-      background: rgba(137, 209, 133, 0.18);
-      border-color: rgba(137, 209, 133, 0.4);
-      color: var(--vscode-success);
+      background: var(--theme-success-bg);
+      border-color: var(--theme-success);
+      color: var(--theme-success);
     }
 
-    /* ---- Controls Section (Space-Effective, No Wasted Space) ---- */
+    /* ---- Controls Section (Space Effective) ---- */
     .controls-card {
       flex: 1;
       min-height: 0;
-      padding: 12px 14px max(14px, env(safe-area-inset-bottom));
+      padding: 10px 12px max(12px, env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      background: var(--vscode-bg);
+      gap: 8px;
+      background: var(--theme-bg);
       justify-content: flex-start;
+      transition: background 0.15s ease;
     }
 
     /* Primary Ready/Signal Button */
     .btn-signal {
       width: 100%;
-      height: 44px;
-      border: 1px solid var(--vscode-focus-border);
+      height: 42px;
+      border: 1px solid var(--theme-accent);
       border-radius: 4px;
-      background: var(--vscode-button-bg);
-      color: #ffffff;
+      background: var(--theme-button-bg);
+      color: var(--theme-button-fg);
       font-family: inherit;
       font-size: 0.88rem;
       font-weight: 600;
@@ -290,23 +347,27 @@
       flex-shrink: 0;
     }
     .btn-signal:hover {
-      background: var(--vscode-button-hover);
+      background: var(--theme-button-hover);
     }
     .btn-signal:active {
-      background: var(--vscode-button-active);
+      background: var(--theme-button-active);
       transform: scale(0.99);
     }
     .btn-signal.sent {
-      background: #2e7d32;
-      border-color: #388e3c;
+      background: var(--theme-success);
+      border-color: var(--theme-success);
+      color: #282828;
+    }
+    [data-theme="light"] .btn-signal.sent {
+      color: #fbf1c7;
     }
 
     /* Full-Width Zoom Card (Takes Same Space As Ready Button) */
     .zoom-card {
       width: 100%;
-      height: 44px;
-      background: var(--vscode-card);
-      border: 1px solid var(--vscode-border);
+      height: 42px;
+      background: var(--theme-card);
+      border: 1px solid var(--theme-border);
       border-radius: 4px;
       padding: 0 10px;
       display: flex;
@@ -314,6 +375,7 @@
       gap: 10px;
       flex-shrink: 0;
       box-sizing: border-box;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
 
     .zoom-btn {
@@ -322,7 +384,7 @@
       border-radius: 3px;
       background: transparent;
       border: 1px solid transparent;
-      color: var(--vscode-text-muted);
+      color: var(--theme-text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -331,9 +393,9 @@
       flex-shrink: 0;
     }
     .zoom-btn:hover {
-      background: var(--vscode-input-bg);
-      color: var(--vscode-text-bright);
-      border-color: var(--vscode-border-light);
+      background: var(--theme-input-bg);
+      color: var(--theme-text-bright);
+      border-color: var(--theme-border-light);
     }
     .zoom-btn:active {
       transform: scale(0.94);
@@ -342,9 +404,9 @@
     .zoom-slider {
       flex: 1;
       height: 6px;
-      accent-color: var(--vscode-focus-border);
+      accent-color: var(--theme-accent);
       cursor: pointer;
-      background: var(--vscode-input-bg);
+      background: var(--theme-input-bg);
       border-radius: 3px;
       outline: none;
     }
@@ -352,13 +414,13 @@
     .zoom-readout {
       font-size: 0.78rem;
       font-weight: 600;
-      font-family: var(--vscode-font-mono);
-      color: var(--vscode-text-bright);
+      font-family: var(--theme-font-mono);
+      color: var(--theme-text-bright);
       min-width: 40px;
       text-align: center;
       padding: 3px 6px;
-      background: var(--vscode-bg);
-      border: 1px solid var(--vscode-border);
+      background: var(--theme-bg);
+      border: 1px solid var(--theme-border);
       border-radius: 3px;
       flex-shrink: 0;
     }
@@ -373,27 +435,28 @@
     }
 
     .tool-group {
-      background: var(--vscode-card);
-      border: 1px solid var(--vscode-border);
+      background: var(--theme-card);
+      border: 1px solid var(--theme-border);
       border-radius: 4px;
       padding: 0 10px;
       display: flex;
       align-items: center;
       gap: 8px;
       flex: 1;
-      height: 38px;
+      height: 36px;
       min-width: 0;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
 
     .tool-icon {
-      color: var(--vscode-text-muted);
+      color: var(--theme-text-muted);
       display: flex;
       flex-shrink: 0;
     }
 
     select.camera-dropdown {
       background: transparent;
-      color: var(--vscode-text);
+      color: var(--theme-text);
       border: none;
       font-size: 0.8rem;
       font-weight: 500;
@@ -406,17 +469,17 @@
       overflow: hidden;
     }
     select.camera-dropdown option {
-      background: var(--vscode-sideBar);
-      color: var(--vscode-text);
+      background: var(--theme-card);
+      color: var(--theme-text);
     }
 
     .btn-tool {
-      background: var(--vscode-card);
-      border: 1px solid var(--vscode-border);
+      background: var(--theme-card);
+      border: 1px solid var(--theme-border);
       border-radius: 4px;
-      color: var(--vscode-text-muted);
-      height: 38px;
-      width: 44px;
+      color: var(--theme-text-muted);
+      height: 36px;
+      width: 42px;
       display: none;
       align-items: center;
       justify-content: center;
@@ -425,14 +488,14 @@
       flex-shrink: 0;
     }
     .btn-tool:hover {
-      background: var(--vscode-card-hover);
-      color: var(--vscode-text-bright);
-      border-color: var(--vscode-border-light);
+      background: var(--theme-card-hover);
+      color: var(--theme-text-bright);
+      border-color: var(--theme-border-light);
     }
     .btn-tool.active {
-      border-color: #ffd700;
-      background: rgba(255, 215, 0, 0.12);
-      color: #ffd700;
+      border-color: var(--theme-yellow);
+      background: rgba(216, 166, 87, 0.16);
+      color: var(--theme-yellow);
     }
   </style>
 </head>
@@ -453,6 +516,24 @@
       </div>
 
       <div class="nav-actions">
+        <!-- Gruvbox Theme Toggle Button -->
+        <button id="themeToggleBtn" class="btn-theme" type="button" title="Toggle Gruvbox Dark / Light mode" aria-label="Toggle theme">
+          <svg id="themeIconDark" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg id="themeIconLight" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
         <a href="/viewer.html" class="btn-secondary" title="Switch to Viewer display">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -471,7 +552,7 @@
       </div>
     </header>
 
-    <!-- Camera Viewfinder (4:3 Aspect Ratio, Touches Edges Horizontally) -->
+    <!-- Camera Viewfinder (3:4 Aspect Ratio, Touches Edges Horizontally) -->
     <div class="viewfinder-wrapper">
       <div class="viewfinder-card" id="cameraWrap">
         <div class="viewfinder-status" id="statusVal">
@@ -554,6 +635,35 @@
   <script src="/static/js/jsqr-enhanced.js"></script>
   <script src="/static/js/qr-preserver.js"></script>
   <script>
+    /* ========== Theme Management (Gruvbox Material Dark / Light) ========== */
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIconDark  = document.getElementById('themeIconDark');
+    const themeIconLight = document.getElementById('themeIconLight');
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem('qr_relay_theme', theme); } catch (_) {}
+      if (theme === 'light') {
+        if (themeIconDark) themeIconDark.style.display = 'none';
+        if (themeIconLight) themeIconLight.style.display = 'block';
+      } else {
+        if (themeIconDark) themeIconDark.style.display = 'block';
+        if (themeIconLight) themeIconLight.style.display = 'none';
+      }
+    }
+
+    const savedTheme = (() => {
+      try { return localStorage.getItem('qr_relay_theme'); } catch (_) { return null; }
+    })() || 'dark';
+    applyTheme(savedTheme);
+
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(cur === 'dark' ? 'light' : 'dark');
+      });
+    }
+
     /* ========== DOM Elements ========== */
     const video        = document.getElementById('video');
     const cameraWrap   = document.getElementById('cameraWrap');
