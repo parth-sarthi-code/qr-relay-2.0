@@ -7,10 +7,10 @@ High-performance, zero-image-streaming QR relay service. Instead of transmitting
 ## ⚡ Core Features
 
 - **Exact QR Preservation (Goal B)**: Preserves module matrix, version (1–40), error correction level (L, M, Q, H), mask pattern (0–7), ECI, and encoding segments.
+- **Dual View Stage (Left & Right)**: Shows both the crisp reconstructed canonical matrix on the left and the downscaled camera capture crop on the right in real-time.
 - **Reed-Solomon Canonical Auto-Repair**: Corrects camera sampling noise and glare, achieving 100% verified identical symbols.
-- **Strict Deterministic Policy**: Zero lossy image streaming and zero fallback guessing — only authentic, 100% verified QR symbols are relayed.
-- **Ultra-Compact Bitstring Relay**: Transmits compact bitstrings (< 100 bytes) over WebSockets with sub-millisecond serialization.
-- **Professional Minimalist Interface**: Built for utility and speed (property inspector, SVG/PNG export, copyable payload).
+- **Ultra-Compact Bitstring Relay**: Transmits compact bitstrings and downscaled crops over WebSockets with sub-millisecond latency.
+- **Professional Minimalist Interface**: Built for utility and speed (side-by-side comparison, display view switcher, property inspector, SVG/PNG/JPG export, copyable payload).
 - **Audio Attention Signal**: Sender-to-viewer operator attention signal with local chime.
 - **Production & Railway Ready**: Pre-configured `Dockerfile`, `.dockerignore`, `railway.json`, and automatic cloud environment detection.
 
@@ -60,7 +60,7 @@ python run.py
 
 ## 🧪 Testing
 
-Run the automated preservation test suite (166 assertions covering all QR versions, EC levels, masks, segments, and strict preservation policy):
+Run the automated preservation test suite (1,007 assertions covering all QR versions, EC levels, masks, segments, multi-block stress, and dual-mode matrix + downscaled image preservation):
 
 ```bash
 deno run -A tests/test_qr_preservation.js

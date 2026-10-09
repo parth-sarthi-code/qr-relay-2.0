@@ -54,7 +54,7 @@
 
     .container {
       width: 100%;
-      max-width: 540px;
+      max-width: 900px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -205,18 +205,146 @@
     }
     .alert-dismiss:hover { background: #dc2626; }
 
-    /* ---- Primary Stage: QR Canvas View ---- */
+    /* ---- Display Mode Bar & Dual Stage Grid ---- */
+    .stage-view-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 4px;
+    }
+    .stage-view-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+    .view-toggle-group {
+      display: inline-flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+    .view-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .view-toggle-btn:hover {
+      color: var(--text-main);
+    }
+    .view-toggle-btn.active {
+      background: #1e2433;
+      color: var(--text-main);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .stage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+      align-items: stretch;
+    }
+    @media (max-width: 720px) {
+      .stage-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stage-grid.view-reconstructed-only #imageCard {
+      display: none !important;
+    }
+    .stage-grid.view-reconstructed-only {
+      grid-template-columns: 1fr;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .stage-grid.view-image-only #reconstructedCard {
+      display: none !important;
+    }
+    .stage-grid.view-image-only {
+      grid-template-columns: 1fr;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
     .stage-card {
       width: 100%;
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
-      padding: 24px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      gap: 14px;
       position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .stage-card:hover {
+      border-color: var(--border-medium);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .stage-card-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stage-card-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stage-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .stage-dot.reconstructed {
+      background: var(--emerald);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+    .stage-dot.image {
+      background: var(--sky);
+      box-shadow: 0 0 8px rgba(2, 132, 199, 0.5);
+    }
+    .stage-card-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .stage-badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: var(--radius-sm);
+    }
+    .stage-badge.reconstructed {
+      background: var(--emerald-bg);
+      border: 1px solid var(--emerald-border);
+      color: var(--emerald);
+    }
+    .stage-badge.image {
+      background: var(--sky-bg);
+      border: 1px solid var(--sky-border);
+      color: var(--sky);
     }
 
     .qr-viewport {
@@ -230,6 +358,7 @@
       justify-content: center;
       overflow: hidden;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      position: relative;
     }
     .qr-canvas {
       width: 100%;
@@ -245,8 +374,45 @@
       height: 100%;
       object-fit: contain;
       display: none;
+      background: #000;
+      cursor: zoom-in;
     }
     .qr-img.visible { display: block; }
+
+    .stage-card-actions {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-stage-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #181d28;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .btn-stage-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-medium);
+      color: var(--text-main);
+    }
+    .btn-stage-action:disabled,
+    .btn-stage-action.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
 
     /* Empty state */
     .empty-state {
@@ -518,25 +684,116 @@
       <button id="dismissBtn" class="alert-dismiss" type="button">Dismiss</button>
     </div>
 
-    <!-- Main QR Stage Card -->
-    <section class="stage-card">
-      <div class="qr-viewport" id="qrViewport">
-        <canvas id="qrCanvas" class="qr-canvas"></canvas>
-        <img id="qrImg" class="qr-img" alt="QR Code" />
+    <!-- Display Mode Toggle -->
+    <div class="stage-view-bar">
+      <div class="stage-view-title">Display View</div>
+      <div class="view-toggle-group">
+        <button id="viewBothBtn" class="view-toggle-btn active" type="button" title="Show Reconstructed Matrix and Downscaled Camera Image side-by-side">
+          Dual View (Both)
+        </button>
+        <button id="viewReconstructedBtn" class="view-toggle-btn" type="button" title="Show only the reconstructed matrix">
+          Reconstructed Only
+        </button>
+        <button id="viewImageBtn" class="view-toggle-btn" type="button" title="Show only the downscaled camera crop">
+          Downscaled Only
+        </button>
+      </div>
+    </div>
 
-        <div class="empty-state" id="placeholder">
-          <div class="empty-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
+    <!-- Main QR Dual Stage Section: Left Reconstructed, Right Downscaled Image -->
+    <section class="stage-grid" id="stageGrid">
+      <!-- Left Card: Reconstructed Matrix -->
+      <div class="stage-card" id="reconstructedCard">
+        <div class="stage-card-header">
+          <div class="stage-card-label">
+            <span class="stage-dot reconstructed"></span>
+            <span class="stage-card-title">Reconstructed QR</span>
+          </div>
+          <span class="stage-badge reconstructed" id="reconstructBadge">Exact Matrix</span>
+        </div>
+
+        <div class="qr-viewport" id="reconstructedViewport">
+          <canvas id="qrCanvas" class="qr-canvas"></canvas>
+          <div class="empty-state" id="placeholderCanvas">
+            <div class="empty-icon">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </div>
+            <div>
+              <div class="empty-heading">No Matrix Received</div>
+              <div class="empty-sub">Exact reconstructed vector matrix will appear here.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-card-actions">
+          <button id="stageDownloadPngBtn" class="btn-stage-action" type="button" title="Download exact reconstructed PNG">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
+            PNG
+          </button>
+          <button id="stageDownloadSvgBtn" class="btn-stage-action" type="button" title="Download crisp SVG vector">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            SVG
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Card: Downscaled Camera Image -->
+      <div class="stage-card" id="imageCard">
+        <div class="stage-card-header">
+          <div class="stage-card-label">
+            <span class="stage-dot image"></span>
+            <span class="stage-card-title">Downscaled Image</span>
           </div>
-          <div>
-            <div class="empty-heading">No QR symbol received</div>
-            <div class="empty-sub">Point the scanner camera at a QR code to reproduce its exact matrix here.</div>
+          <span class="stage-badge image" id="imageBadge">Camera Crop</span>
+        </div>
+
+        <div class="qr-viewport" id="imageViewport">
+          <img id="qrImg" class="qr-img" alt="Downscaled camera crop" />
+          <div class="empty-state" id="placeholderImg">
+            <div class="empty-icon">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </div>
+            <div>
+              <div class="empty-heading">No Camera Image</div>
+              <div class="empty-sub">Downscaled camera crop from scanner feed will appear here.</div>
+            </div>
           </div>
+        </div>
+
+        <div class="stage-card-actions">
+          <button id="stageDownloadImgBtn" class="btn-stage-action" type="button" title="Download downscaled camera capture JPG">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Photo (JPG)
+          </button>
+          <button id="stageExpandImgBtn" class="btn-stage-action" type="button" title="Open camera capture in new tab">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            Expand
+          </button>
         </div>
       </div>
     </section>
@@ -611,6 +868,15 @@
           </svg>
           Download SVG
         </button>
+
+        <button id="downloadImgBtn" class="btn-action" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download Photo
+        </button>
       </div>
     </section>
 
@@ -635,34 +901,49 @@
   <script src="/static/js/qr-preserver.js"></script>
   <script>
     /* ========== DOM Elements ========== */
-    const qrCanvas          = document.getElementById('qrCanvas');
-    const qrImg             = document.getElementById('qrImg');
-    const placeholder       = document.getElementById('placeholder');
-    const preservationPanel = document.getElementById('preservationPanel');
-    const modeBadge         = document.getElementById('modeBadge');
-    const valVersion        = document.getElementById('valVersion');
-    const valEc             = document.getElementById('valEc');
-    const valMask           = document.getElementById('valMask');
-    const valGrid           = document.getElementById('valGrid');
-    const valVerification   = document.getElementById('valVerification');
-    const timestampBadge    = document.getElementById('timestampBadge');
-    const payloadText       = document.getElementById('payloadText');
-    const payloadLenBadge   = document.getElementById('payloadLenBadge');
-    const copyPayloadBtn    = document.getElementById('copyPayloadBtn');
-    const copyBtnText       = document.getElementById('copyBtnText');
-    const downloadPngBtn    = document.getElementById('downloadPngBtn');
-    const downloadSvgBtn    = document.getElementById('downloadSvgBtn');
-    const dot               = document.getElementById('dot');
-    const connLabel         = document.getElementById('connLabel');
-    const sendersVal        = document.getElementById('sendersVal');
-    const viewersVal        = document.getElementById('viewersVal');
-    const timeVal           = document.getElementById('timeVal');
-    const audioToggleBtn    = document.getElementById('audioToggleBtn');
-    const audioIconSvg      = document.getElementById('audioIconSvg');
-    const audioLabel        = document.getElementById('audioLabel');
-    const readyBanner       = document.getElementById('readyBanner');
-    const bannerSub         = document.getElementById('bannerSub');
-    const dismissBtn        = document.getElementById('dismissBtn');
+    const stageGrid             = document.getElementById('stageGrid');
+    const reconstructedCard     = document.getElementById('reconstructedCard');
+    const imageCard             = document.getElementById('imageCard');
+    const viewBothBtn           = document.getElementById('viewBothBtn');
+    const viewReconstructedBtn  = document.getElementById('viewReconstructedBtn');
+    const viewImageBtn          = document.getElementById('viewImageBtn');
+
+    const qrCanvas              = document.getElementById('qrCanvas');
+    const qrImg                 = document.getElementById('qrImg');
+    const placeholderCanvas     = document.getElementById('placeholderCanvas');
+    const placeholderImg        = document.getElementById('placeholderImg');
+
+    const stageDownloadPngBtn   = document.getElementById('stageDownloadPngBtn');
+    const stageDownloadSvgBtn   = document.getElementById('stageDownloadSvgBtn');
+    const stageDownloadImgBtn   = document.getElementById('stageDownloadImgBtn');
+    const stageExpandImgBtn     = document.getElementById('stageExpandImgBtn');
+
+    const preservationPanel     = document.getElementById('preservationPanel');
+    const modeBadge             = document.getElementById('modeBadge');
+    const valVersion            = document.getElementById('valVersion');
+    const valEc                 = document.getElementById('valEc');
+    const valMask               = document.getElementById('valMask');
+    const valGrid               = document.getElementById('valGrid');
+    const valVerification       = document.getElementById('valVerification');
+    const timestampBadge        = document.getElementById('timestampBadge');
+    const payloadText           = document.getElementById('payloadText');
+    const payloadLenBadge       = document.getElementById('payloadLenBadge');
+    const copyPayloadBtn        = document.getElementById('copyPayloadBtn');
+    const copyBtnText           = document.getElementById('copyBtnText');
+    const downloadPngBtn        = document.getElementById('downloadPngBtn');
+    const downloadSvgBtn        = document.getElementById('downloadSvgBtn');
+    const downloadImgBtn        = document.getElementById('downloadImgBtn');
+    const dot                   = document.getElementById('dot');
+    const connLabel             = document.getElementById('connLabel');
+    const sendersVal            = document.getElementById('sendersVal');
+    const viewersVal            = document.getElementById('viewersVal');
+    const timeVal               = document.getElementById('timeVal');
+    const audioToggleBtn        = document.getElementById('audioToggleBtn');
+    const audioIconSvg          = document.getElementById('audioIconSvg');
+    const audioLabel            = document.getElementById('audioLabel');
+    const readyBanner           = document.getElementById('readyBanner');
+    const bannerSub             = document.getElementById('bannerSub');
+    const dismissBtn            = document.getElementById('dismissBtn');
 
     /* ========== State ========== */
     const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -892,23 +1173,86 @@
       });
     }
 
-    /* ========== Exact QR Matrix Renderer ========== */
+    /* ========== Display View Modes ========== */
+    function setViewMode(mode) {
+      if (!stageGrid) return;
+      if (mode === 'both') {
+        stageGrid.classList.remove('view-reconstructed-only', 'view-image-only');
+        if (viewBothBtn) viewBothBtn.classList.add('active');
+        if (viewReconstructedBtn) viewReconstructedBtn.classList.remove('active');
+        if (viewImageBtn) viewImageBtn.classList.remove('active');
+      } else if (mode === 'reconstructed') {
+        stageGrid.classList.add('view-reconstructed-only');
+        stageGrid.classList.remove('view-image-only');
+        if (viewReconstructedBtn) viewReconstructedBtn.classList.add('active');
+        if (viewBothBtn) viewBothBtn.classList.remove('active');
+        if (viewImageBtn) viewImageBtn.classList.remove('active');
+      } else if (mode === 'image') {
+        stageGrid.classList.add('view-image-only');
+        stageGrid.classList.remove('view-reconstructed-only');
+        if (viewImageBtn) viewImageBtn.classList.add('active');
+        if (viewBothBtn) viewBothBtn.classList.remove('active');
+        if (viewReconstructedBtn) viewReconstructedBtn.classList.remove('active');
+      }
+    }
+
+    if (viewBothBtn) viewBothBtn.addEventListener('click', () => setViewMode('both'));
+    if (viewReconstructedBtn) viewReconstructedBtn.addEventListener('click', () => setViewMode('reconstructed'));
+    if (viewImageBtn) viewImageBtn.addEventListener('click', () => setViewMode('image'));
+
+    /* ========== Dual Stage Renderer ========== */
     function displayPreservedQr(qrData) {
       if (!qrData) return;
       const preserved = QrPreserver.PreservedQr.fromJSON(qrData);
-      if (!preserved || !preserved.moduleMatrix) return;
+      if (!preserved) return;
 
       currentPreserved = preserved;
 
-      // Render exact module matrix cleanly on canvas
-      QrPreserver.ExactQrRenderer.renderToCanvas(preserved.moduleMatrix, qrCanvas, {
-        quietZone: 4,
-        targetSize: 360,
-      });
+      let hasMatrix = false;
+      let hasImage = false;
 
-      qrCanvas.classList.add('visible');
-      qrImg.style.display = 'none';
-      placeholder.style.display = 'none';
+      // 1. Left Card: Reconstructed Matrix
+      if (preserved.moduleMatrix && Array.isArray(preserved.moduleMatrix) && preserved.moduleMatrix.length > 0) {
+        QrPreserver.ExactQrRenderer.renderToCanvas(preserved.moduleMatrix, qrCanvas, {
+          quietZone: 4,
+          targetSize: 360,
+        });
+        qrCanvas.classList.add('visible');
+        if (placeholderCanvas) placeholderCanvas.style.display = 'none';
+
+        if (stageDownloadPngBtn) { stageDownloadPngBtn.disabled = false; stageDownloadPngBtn.classList.remove('disabled'); }
+        if (stageDownloadSvgBtn) { stageDownloadSvgBtn.disabled = false; stageDownloadSvgBtn.classList.remove('disabled'); }
+        if (downloadPngBtn) { downloadPngBtn.style.opacity = '1'; downloadPngBtn.style.pointerEvents = 'auto'; }
+        if (downloadSvgBtn) { downloadSvgBtn.style.opacity = '1'; downloadSvgBtn.style.pointerEvents = 'auto'; }
+        hasMatrix = true;
+      } else {
+        qrCanvas.classList.remove('visible');
+        if (placeholderCanvas) placeholderCanvas.style.display = 'flex';
+
+        if (stageDownloadPngBtn) { stageDownloadPngBtn.disabled = true; stageDownloadPngBtn.classList.add('disabled'); }
+        if (stageDownloadSvgBtn) { stageDownloadSvgBtn.disabled = true; stageDownloadSvgBtn.classList.add('disabled'); }
+        if (downloadPngBtn) { downloadPngBtn.style.opacity = '0.4'; downloadPngBtn.style.pointerEvents = 'none'; }
+        if (downloadSvgBtn) { downloadSvgBtn.style.opacity = '0.4'; downloadSvgBtn.style.pointerEvents = 'none'; }
+      }
+
+      // 2. Right Card: Downscaled Camera Crop Image
+      if (preserved.image) {
+        qrImg.src = preserved.image;
+        qrImg.classList.add('visible');
+        if (placeholderImg) placeholderImg.style.display = 'none';
+
+        if (stageDownloadImgBtn) { stageDownloadImgBtn.disabled = false; stageDownloadImgBtn.classList.remove('disabled'); }
+        if (stageExpandImgBtn) { stageExpandImgBtn.disabled = false; stageExpandImgBtn.classList.remove('disabled'); }
+        if (downloadImgBtn) { downloadImgBtn.style.opacity = '1'; downloadImgBtn.style.pointerEvents = 'auto'; }
+        hasImage = true;
+      } else {
+        qrImg.classList.remove('visible');
+        if (placeholderImg) placeholderImg.style.display = 'flex';
+
+        if (stageDownloadImgBtn) { stageDownloadImgBtn.disabled = true; stageDownloadImgBtn.classList.add('disabled'); }
+        if (stageExpandImgBtn) { stageExpandImgBtn.disabled = true; stageExpandImgBtn.classList.add('disabled'); }
+        if (downloadImgBtn) { downloadImgBtn.style.opacity = '0.4'; downloadImgBtn.style.pointerEvents = 'none'; }
+      }
 
       // Timestamp
       const now = new Date();
@@ -916,21 +1260,26 @@
       timeVal.textContent = timeStr;
       timestampBadge.textContent = timeStr;
 
-      // Mode Badge
+      // Mode Badge & Panels
       preservationPanel.style.display = 'flex';
-      if (preserved.mode === 'EXACT') {
+      if (hasMatrix && hasImage) {
         modeBadge.className = 'mode-pill exact';
-        modeBadge.textContent = 'Mode 1 — Exact (100% Identical Matrix)';
-      } else {
-        modeBadge.className = 'mode-pill structural';
-        modeBadge.textContent = 'Mode 2 — Structural (Fixed Metadata)';
+        modeBadge.textContent = 'Dual View — Reconstructed (Left) + Downscaled (Right)';
+      } else if (hasMatrix) {
+        modeBadge.className = 'mode-pill exact';
+        modeBadge.textContent = preserved.mode === 'EXACT'
+          ? 'Mode 1 — Exact Matrix (100% Identical)'
+          : 'Mode 2 — Structural (Fixed Metadata)';
+      } else if (hasImage) {
+        modeBadge.className = 'mode-pill payload';
+        modeBadge.textContent = 'Mode 3 — Downscaled Camera Image';
       }
 
       // Metadata Inspector
-      valVersion.textContent = preserved.version ? `V${preserved.version}` : '—';
+      valVersion.textContent = preserved.version ? `V${preserved.version}` : (hasImage ? 'Camera Crop' : '—');
       valEc.textContent = preserved.errorCorrection || '—';
       valMask.textContent = preserved.maskPattern !== null ? `M${preserved.maskPattern}` : '—';
-      valGrid.textContent = preserved.matrixSize ? `${preserved.matrixSize}×${preserved.matrixSize}` : '—';
+      valGrid.textContent = preserved.matrixSize ? `${preserved.matrixSize}×${preserved.matrixSize}` : (hasImage ? '360×360 px' : '—');
 
       // Integrity Status
       if (preserved.isVerified) {
@@ -949,17 +1298,67 @@
             <span>100% Verified Identical</span>
           `;
         }
-      } else {
+      } else if (hasMatrix) {
         valVerification.innerHTML = `<span style="color:var(--amber);">${preserved.mismatchCount >= 0 ? `${preserved.mismatchCount} mismatches` : 'Unverified'}</span>`;
+      } else if (hasImage) {
+        valVerification.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span style="color:var(--amber);">Optical Camera Capture</span>
+        `;
       }
-
-      downloadSvgBtn.style.opacity = '1';
-      downloadSvgBtn.style.pointerEvents = 'auto';
 
       // Payload
       lastRenderedPayload = preserved.payload || '';
-      payloadText.textContent = lastRenderedPayload || '(Binary or unparsed payload)';
+      payloadText.textContent = lastRenderedPayload || (hasImage ? '(Camera crop received — payload unparsed)' : '(Binary or unparsed payload)');
       payloadLenBadge.textContent = `${lastRenderedPayload.length} chars`;
+    }
+
+    /* ========== Legacy Binary Frame Handler ========== */
+    function displayLegacyImage(blob) {
+      if (prevObjectURL) URL.revokeObjectURL(prevObjectURL);
+      const url = URL.createObjectURL(blob);
+      prevObjectURL = url;
+
+      qrImg.src = url;
+      qrImg.classList.add('visible');
+      if (placeholderImg) placeholderImg.style.display = 'none';
+
+      if (stageDownloadImgBtn) { stageDownloadImgBtn.disabled = false; stageDownloadImgBtn.classList.remove('disabled'); }
+      if (stageExpandImgBtn) { stageExpandImgBtn.disabled = false; stageExpandImgBtn.classList.remove('disabled'); }
+      if (downloadImgBtn) { downloadImgBtn.style.opacity = '1'; downloadImgBtn.style.pointerEvents = 'auto'; }
+
+      currentPreserved = {
+        mode: 'IMAGE',
+        image: url,
+        payload: '',
+      };
+
+      preservationPanel.style.display = 'flex';
+      modeBadge.className = 'mode-pill payload';
+      modeBadge.textContent = 'Mode 3 — Downscaled Image (Binary Stream)';
+      valVersion.textContent = 'Camera Crop';
+      valEc.textContent = '—';
+      valMask.textContent = '—';
+      valGrid.textContent = 'Downscaled Stream';
+      valVerification.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span style="color:var(--amber);">Optical Camera Stream</span>
+      `;
+
+      lastRenderedPayload = '';
+      payloadText.textContent = '(Downscaled camera crop — legacy binary stream)';
+      payloadLenBadge.textContent = '0 chars';
+
+      const now = new Date();
+      timeVal.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
     /* ========== Export Controls ========== */
@@ -973,18 +1372,18 @@
       } catch (_) {}
     });
 
-    downloadPngBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!qrCanvas || !currentPreserved) return;
+    function downloadPng() {
+      if (!qrCanvas || !currentPreserved || !currentPreserved.moduleMatrix) return;
       const a = document.createElement('a');
       const slug = (currentPreserved.payload || 'qr').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
       a.download = `qr_${slug}.png`;
       a.href = qrCanvas.toDataURL('image/png');
       a.click();
-    });
+    }
+    if (downloadPngBtn) downloadPngBtn.addEventListener('click', downloadPng);
+    if (stageDownloadPngBtn) stageDownloadPngBtn.addEventListener('click', downloadPng);
 
-    downloadSvgBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
+    function downloadSvg() {
       if (!currentPreserved || !currentPreserved.moduleMatrix) return;
       const svgStr = QrPreserver.ExactQrRenderer.renderToSvg(currentPreserved.moduleMatrix, { quietZone: 4 });
       const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
@@ -995,7 +1394,33 @@
       a.href = url;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    });
+    }
+    if (downloadSvgBtn) downloadSvgBtn.addEventListener('click', downloadSvg);
+    if (stageDownloadSvgBtn) stageDownloadSvgBtn.addEventListener('click', downloadSvg);
+
+    function downloadPhoto() {
+      const imgSrc = (currentPreserved && currentPreserved.image) || qrImg.src;
+      if (!imgSrc) return;
+      const a = document.createElement('a');
+      const slug = (currentPreserved && currentPreserved.payload ? currentPreserved.payload : 'camera_crop')
+        .replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20);
+      a.download = `qr_camera_${slug}.jpg`;
+      a.href = imgSrc;
+      a.click();
+    }
+    if (downloadImgBtn) downloadImgBtn.addEventListener('click', downloadPhoto);
+    if (stageDownloadImgBtn) stageDownloadImgBtn.addEventListener('click', downloadPhoto);
+
+    function expandPhoto() {
+      const imgSrc = (currentPreserved && currentPreserved.image) || qrImg.src;
+      if (!imgSrc) return;
+      const win = window.open();
+      if (win) {
+        win.document.write(`<title>Downscaled Camera Capture</title><body style="margin:0;background:#090a0f;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${imgSrc}" style="max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,0.8);"/></body>`);
+      }
+    }
+    if (stageExpandImgBtn) stageExpandImgBtn.addEventListener('click', expandPhoto);
+    if (qrImg) qrImg.addEventListener('click', expandPhoto);
 
     /* ========== Initialize ========== */
     connectWS();

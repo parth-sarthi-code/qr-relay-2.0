@@ -215,10 +215,11 @@
       this.dataCodewords = data.dataCodewords || null;
       this.moduleMatrix = data.moduleMatrix || null;
       this.matrixSize = data.matrixSize || (data.moduleMatrix ? data.moduleMatrix.length : null);
+      this.image = data.image || null;
       // Pre-compute and CACHE compressed matrix once — constructor is the only place this should run.
       this.compressedMatrix = data.compressedMatrix || (data.moduleMatrix ? compressMatrix(data.moduleMatrix) : null);
       this.location = data.location || null;
-      this.mode = data.mode || 'EXACT';
+      this.mode = data.mode || (data.moduleMatrix ? 'EXACT' : (data.image ? 'IMAGE' : 'EXACT'));
       this.isVerified = !!data.isVerified;
       this.mismatchCount = typeof data.mismatchCount === 'number' ? data.mismatchCount : 0;
       this.verification = data.verification || null;
@@ -241,6 +242,7 @@
         matrixSize: this.matrixSize,
         // FIX: reuse pre-computed field — never re-compress here (was O(n²) per send)
         compressedMatrix: this.compressedMatrix,
+        image: this.image,
         mode: this.mode,
         isVerified: this.isVerified,
         mismatchCount: this.mismatchCount,
@@ -264,6 +266,7 @@
         moduleMatrix: matrix,
         // Pass through the pre-compressed field so constructor skips re-compression
         compressedMatrix: json.compressedMatrix || null,
+        image: json.image || null,
       });
     }
   }
@@ -295,6 +298,7 @@
     const segments = decoded.chunks || null;
     const originalMatrix = decoded.moduleMatrix || null;
     const location = decoded.location || null;
+    const image = decoded.image || decoded.downscaledImage || decoded.crop || null;
 
     // Detect ECI if present in segments
     let eci = null;
@@ -420,6 +424,7 @@
         rawCodewords,
         dataCodewords,
         moduleMatrix: finalMatrix,
+        image,
         location,
         mode: 'EXACT',
         isVerified,
@@ -441,6 +446,7 @@
         rawCodewords,
         dataCodewords,
         moduleMatrix: canonicalMatrix,
+        image,
         location,
         mode: 'STRUCTURAL',
         isVerified: true,
@@ -455,8 +461,34 @@
       });
     }
 
-    // Strict preservation policy: Fallback mode completely removed.
-    // If exact module matrix or structural parameters cannot be extracted, do not output unverified symbols.
+    // MODE 3: DOWNSCALED IMAGE (When exact matrix cannot be extracted)
+    if (image) {
+      return new PreservedQr({
+        payload,
+        version: null,
+        errorCorrection: null,
+        maskPattern: null,
+        segments: null,
+        eci: null,
+        rawCodewords: null,
+        dataCodewords: null,
+        moduleMatrix: null,
+        image,
+        location,
+        mode: 'IMAGE',
+        isVerified: false,
+        mismatchCount: -1,
+        verification: {
+          equal: false,
+          totalModules: 0,
+          mismatches: -1,
+          matchPercentage: 0,
+        },
+        usedCanonical: false,
+      });
+    }
+
+    // Strict preservation policy: If neither matrix, structural parameters, nor image can be extracted, return null
     return null;
   }
 

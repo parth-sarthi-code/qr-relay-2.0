@@ -206,15 +206,57 @@ const pEci = runPreservationTest(
 );
 assert(pEci.eci === 26, "Test I — Preserved ECI assignment matches 26");
 
-// Test J — Strict Preservation Policy: No Fallback Mode
-console.log("\n--- Running Test J: Strict Preservation Policy (No Fallback Mode) ---");
+// Test J — Strict Preservation Policy & Dual Mode Image Preservation
+console.log("\n--- Running Test J: Strict Preservation Policy & Dual Mode ---");
 const dummyPayload = "FALLBACK-TEST-12345";
 const decodedWithoutMatrix = {
   data: dummyPayload,
 };
 
 const preservedResult = createPreservedQr(decodedWithoutMatrix);
-assert(preservedResult === null, "Test J — Strict preservation policy: returns null when structural preservation is impossible (no fallback mode)");
+assert(preservedResult === null, "Test J — Strict preservation policy: returns null when structural preservation is impossible without image");
+
+// Test J2: Dual Mode (Reconstructed Matrix + Downscaled Image simultaneously)
+console.log("\n--- Running Test J2: Dual Mode (Reconstructed Matrix + Downscaled Image) ---");
+const testImgData = "data:image/jpeg;base64,/9j/4AAQSkZJRg==";
+const qrSample = qrcodegen.QrCode.encodeText("DUAL-VIEW-TEST", qrcodegen.QrCode.Ecc.MEDIUM);
+const sampleMatrix = QrPreserver.qrCodeToMatrix(qrSample);
+const decodedDual = {
+  data: "DUAL-VIEW-TEST",
+  version: qrSample.version,
+  errorCorrectionLevel: 'M',
+  maskPattern: qrSample.mask,
+  moduleMatrix: sampleMatrix,
+  image: testImgData,
+};
+
+const preservedDual = createPreservedQr(decodedDual);
+assert(preservedDual !== null, "Test J2 — Dual PreservedQr created");
+assert(preservedDual.mode === "EXACT", `Test J2 — Mode is EXACT (got ${preservedDual.mode})`);
+assert(preservedDual.moduleMatrix !== null, "Test J2 — Reconstructed module matrix is present");
+assert(preservedDual.image === testImgData, "Test J2 — Downscaled image is bundled simultaneously");
+
+// Serialization roundtrip for dual mode
+const dualJson = preservedDual.toJSON();
+assert(dualJson.image === testImgData, "Test J2 — toJSON() preserves image field");
+assert(dualJson.compressedMatrix !== null, "Test J2 — toJSON() preserves compressedMatrix");
+
+const restoredDual = QrPreserver.PreservedQr.fromJSON(dualJson);
+assert(restoredDual.image === testImgData, "Test J2 — fromJSON() restores image field");
+assert(restoredDual.moduleMatrix !== null, "Test J2 — fromJSON() restores moduleMatrix");
+assert(restoredDual.matrixSize === qrSample.size, "Test J2 — fromJSON() matrixSize matches");
+
+// Test J3: Downscaled image fallback when matrix cannot be extracted
+console.log("\n--- Running Test J3: Downscaled image when matrix cannot be extracted ---");
+const decodedImgOnly = {
+  data: "IMAGE-ONLY-TEST",
+  image: testImgData,
+};
+const preservedImgOnly = createPreservedQr(decodedImgOnly);
+assert(preservedImgOnly !== null, "Test J3 — Image mode PreservedQr created");
+assert(preservedImgOnly.mode === "IMAGE", "Test J3 — Mode is IMAGE");
+assert(preservedImgOnly.image === testImgData, "Test J3 — Image is preserved");
+assert(preservedImgOnly.moduleMatrix === null, "Test J3 — moduleMatrix is null");
 
 
 // ============================================================

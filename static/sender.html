@@ -468,11 +468,61 @@
     let viewerCount = 0;
     let torchOn = false;
 
-    // Offscreen detection & ROI crop canvases
+    // Offscreen detection, ROI crop, and downscaled export canvases
     const detectCanvas = document.createElement('canvas');
     const detectCtx    = detectCanvas.getContext('2d', { willReadFrequently: true });
     const roiCanvas    = document.createElement('canvas');
     const roiCtx       = roiCanvas.getContext('2d', { willReadFrequently: true });
+    const cropCanvas   = document.createElement('canvas');
+    const cropCtx      = cropCanvas.getContext('2d', { willReadFrequently: true });
+
+    // Pre-computed LUT for grayscale + contrast boost (factor=2.5, midpoint=128)
+    const CONTRAST_LUT = new Uint8Array(256);
+    (() => {
+      const FACTOR = 2.5;
+      for (let i = 0; i < 256; i++) {
+        CONTRAST_LUT[i] = Math.max(0, Math.min(255, Math.round(FACTOR * (i - 128) + 128)));
+      }
+    })();
+
+    function extractDownscaledCrop(bbox, scale, vw, vh) {
+      if (!bbox || !scale || !vw || !vh) return null;
+      const pad = 0.22;
+      const fx = bbox.x / scale;
+      const fy = bbox.y / scale;
+      const fw = bbox.w / scale;
+      const fh = bbox.h / scale;
+
+      const side = Math.max(fw, fh);
+      const paddedSide = side * (1 + pad * 2);
+      const centerX = fx + fw / 2;
+      const centerY = fy + fh / 2;
+      const cx = Math.max(0, Math.round(centerX - paddedSide / 2));
+      const cy = Math.max(0, Math.round(centerY - paddedSide / 2));
+      const cw = Math.min(Math.round(paddedSide), vw - cx);
+      const ch = Math.min(Math.round(paddedSide), vh - cy);
+      const cropSide = Math.min(cw, ch);
+
+      if (cropSide <= 20) return null;
+
+      const CROP_SIZE = 360;
+      cropCanvas.width = CROP_SIZE;
+      cropCanvas.height = CROP_SIZE;
+      cropCtx.drawImage(video, cx, cy, cropSide, cropSide, 0, 0, CROP_SIZE, CROP_SIZE);
+
+      // Boost contrast and sharpen grayscale for clean QR legibility
+      try {
+        const imgData = cropCtx.getImageData(0, 0, CROP_SIZE, CROP_SIZE);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = CONTRAST_LUT[Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2])];
+          d[i] = d[i + 1] = d[i + 2] = gray;
+        }
+        cropCtx.putImageData(imgData, 0, 0);
+      } catch (_) {}
+
+      return cropCanvas.toDataURL('image/jpeg', 0.88);
+    }
 
     // Native BarcodeDetector (if available on Chrome/Android)
     let nativeDetector = null;
@@ -819,15 +869,32 @@
       // Update overlay box
       showOverlay(bbox, scale);
 
-      // Preserve QR locally (strict exact preservation only — no fallback mode)
-      const preserved = code ? QrPreserver.createPreservedQr(code) : null;
+      // Extract downscaled crop of QR region from camera video
+      const downscaledImg = extractDownscaledCrop(bbox, scale, vw, vh);
+
+      if (code) {
+        code.image = downscaledImg;
+      }
+
+      // Preserve QR locally (reconstructs canonical/exact matrix and bundles downscaled crop)
+      let preserved = code ? QrPreserver.createPreservedQr(code) : null;
+      if (!preserved && downscaledImg) {
+        preserved = new QrPreserver.PreservedQr({
+          payload: qrText,
+          location: code ? code.location : null,
+          image: downscaledImg,
+          mode: 'IMAGE',
+          isVerified: false,
+        });
+      }
+
       if (!preserved) {
         statusVal.className = 'viewfinder-status';
         statusVal.textContent = 'Focusing QR modules...';
         return;
       }
 
-      const signature = preserved.compressedMatrix || preserved.payload;
+      const signature = (preserved.compressedMatrix || '') + ':' + (preserved.payload || '') + (preserved.mode === 'IMAGE' ? (':' + Math.round(bbox.x / 12) + '_' + Math.round(bbox.y / 12)) : '');
       if (signature === lastQRText) return;
       lastQRText = signature;
 
@@ -843,7 +910,11 @@
         const ecStr = preserved.errorCorrection ? `EC:${preserved.errorCorrection}` : '';
         const maskStr = preserved.maskPattern !== null ? `M${preserved.maskPattern}` : '';
         statusVal.className = 'viewfinder-status detected';
-        statusVal.textContent = `Transmitted: V${preserved.version || '?'} ${ecStr} ${maskStr} [${preserved.mode}]`;
+        if (preserved.mode === 'IMAGE') {
+          statusVal.textContent = `Transmitted: Downscaled Image [IMAGE]`;
+        } else {
+          statusVal.textContent = `Transmitted: V${preserved.version || '?'} ${ecStr} ${maskStr} [Reconstructed + Crop]`;
+        }
       } else {
         statusVal.textContent = 'Detected — Relay offline';
       }
