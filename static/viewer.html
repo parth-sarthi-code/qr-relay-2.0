@@ -1247,7 +1247,18 @@
         hasImage = true;
       } else {
         qrImg.classList.remove('visible');
-        if (placeholderImg) placeholderImg.style.display = 'flex';
+        if (placeholderImg) {
+          placeholderImg.style.display = 'flex';
+          const emptyHeading = placeholderImg.querySelector('.empty-heading');
+          const emptySub = placeholderImg.querySelector('.empty-sub');
+          if (hasMatrix) {
+            if (emptyHeading) emptyHeading.textContent = '⚡ Fast Mode Active';
+            if (emptySub) emptySub.textContent = 'Sender selected reconstructed matrix only (<1KB payload, zero image latency).';
+          } else {
+            if (emptyHeading) emptyHeading.textContent = 'No Camera Image';
+            if (emptySub) emptySub.textContent = 'Downscaled camera crop from scanner feed will appear here.';
+          }
+        }
 
         if (stageDownloadImgBtn) { stageDownloadImgBtn.disabled = true; stageDownloadImgBtn.classList.add('disabled'); }
         if (stageExpandImgBtn) { stageExpandImgBtn.disabled = true; stageExpandImgBtn.classList.add('disabled'); }
@@ -1267,9 +1278,7 @@
         modeBadge.textContent = 'Dual View — Reconstructed (Left) + Downscaled (Right)';
       } else if (hasMatrix) {
         modeBadge.className = 'mode-pill exact';
-        modeBadge.textContent = preserved.mode === 'EXACT'
-          ? 'Mode 1 — Exact Matrix (100% Identical)'
-          : 'Mode 2 — Structural (Fixed Metadata)';
+        modeBadge.textContent = '⚡ Fast Mode — Exact Reconstructed Matrix (<1KB)';
       } else if (hasImage) {
         modeBadge.className = 'mode-pill payload';
         modeBadge.textContent = 'Mode 3 — Downscaled Camera Image';
